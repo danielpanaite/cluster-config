@@ -105,3 +105,23 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.3/manifests/tigera-operator.yaml
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.3/manifests/custom-resources.yaml
 ```
+
+- Install MetalLB
+
+Prepare:
+```bash
+kubectl get configmap kube-proxy -n kube-system -o yaml | \
+sed -e "s/strictARP: false/strictARP: true/" | \
+kubectl apply -f - -n kube-system
+```
+
+Install via manifest:
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.12/config/manifests/metallb-native.yaml
+```
+
+Apply ip pool manifests:
+```bash
+kubectl apply -f ipaddresspool.yaml
+kubectl apply -f l2advertisement.yaml
+```
