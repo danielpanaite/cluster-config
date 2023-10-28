@@ -1,0 +1,124 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: emby
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emby-config
+  namespace: emby
+data:
+  pguid: "1000"
+  puid: "1000"
+  tz: "Europe/Rome"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: emby-local-pvc
+  namespace: emby
+  labels:
+    app: emby
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: embymedia-local-pvc
+  namespace: emby
+  labels:
+    app: emby
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emby
+  namespace: emby
+spec:
+  selector:
+    app: emby
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8096
+      name: http
+    - protocol: TCP
+      port: 443
+      targetPort: 8920
+      name: https
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.110
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emby
+  namespace: emby
+  labels:
+    app: emby
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emby
+  template:
+    metadata:
+      labels:
+        app: emby
+    spec:
+      volumes:
+        - name: emby-vol
+          persistentVolumeClaim:
+            claimName: emby-local-pvc
+        - name: embymedia-vol
+          persistentVolumeClaim:
+            claimName: embymedia-local-pvc
+      containers:
+      - name: emby
+        image: lscr.io/linuxserver/emby
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1500m"
+        ports:
+        - containerPort: 8096
+        - containerPort: 8920
+        volumeMounts:
+          - mountPath: "/config"
+            name: emby-vol
+          - mountPath: "/data"
+            name: embymedia-vol
+        env:
+        - name: GUID
+          valueFrom:
+            configMapKeyRef:
+              name: emby-config
+              key: pguid
+        - name: PUID
+          valueFrom:
+            configMapKeyRef:
+              name: emby-config
+              key: puid
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: emby-config
+              key: tz
