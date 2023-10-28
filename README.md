@@ -128,3 +128,11 @@ Apply ip pool manifests:
 kubectl apply -f ipaddresspool.yaml
 kubectl apply -f l2advertisement.yaml
 ```
+
+- Install Nginx Ingress:
+
+Apply manifest for v1.9.4
+```bash
+cd nginx-ingress
+kubectl apply -f deployment.yaml
+```
