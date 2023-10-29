@@ -10,8 +10,8 @@ metadata:
   name: emby-config
   namespace: emby
 data:
-  pguid: "1000"
-  puid: "1000"
+  pguid: "3000"
+  puid: "3000"
   tz: "Europe/Rome"
 ---
 apiVersion: v1
