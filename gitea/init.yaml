@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gitea
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: giteaconfig-local-pvc
+  namespace: gitea
+  annotations:
+    storageClassName: "nfs-csi"
+  labels:
+    app: gitea
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: giteadata-local-pvc
+  namespace: gitea
+  annotations:
+    storageClassName: "nfs-csi"
+  labels:
+    app: gitea
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
