@@ -27,7 +27,7 @@ spec:
     - protocol: TCP
       port: 22
       name: ssh
-      targetPort: 2222
+      targetPort: 22
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -77,7 +77,7 @@ spec:
 
         ports:
         - containerPort: 3000
-        - containerPort: 2222
+        - containerPort: 22
 
         volumeMounts:
           - mountPath: /var/lib/gitea
