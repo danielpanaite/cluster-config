@@ -1,0 +1,279 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+secrets:
+  - name: homepage
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+  annotations:
+    kubernetes.io/service-account.name: homepage
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+data:
+  kubernetes.yaml: |
+    mode: cluster
+  settings.yaml: |
+    title: Sushi Home!
+    color: sky
+    theme: dark
+    disableCollapse: true
+    useEqualHeights: true
+    statusStyle: dot
+    layout:
+      Info:
+        style: column
+      Services:
+        style: column
+  #settings.yaml: |
+  #  providers:
+  #    longhorn:
+  #      url: https://longhorn.my.network
+  custom.css: ""
+  custom.js: ""
+  bookmarks.yaml: ""
+  services.yaml: |
+      - Info:
+        - Calendar:
+            widget:
+              type: calendar
+              maxEvents: 10 # optional - defaults to 10
+              showTime: true # optional - show time for event happening today - defaults to false
+              integrations: # optional
+                - type: ical # Show calendar events from another service
+                  url: https://calendar.google.com/calendar/ical/dani.panaite%40gmail.com/private-0b2272d416b209c2ba546ef7ea94852e/basic.ics
+                  name: Google # required - name for these calendar events
+                  color: teal
+                  params: # optional - additional params for the service
+                    showName: true # optional - show name before event title in event line - defaults to false
+        - Truenas:
+            icon: truenas.png
+            href: http://10.0.0.20
+            ping: 10.0.0.20
+            widget:
+              type: truenas
+              url: http://10.0.0.20
+              key: 2-jmhFLuRcTQWKllnVMLq2x5giPo4DwQSp6BaMa2NI0LsR7TuutVa70Uaa4ptwBL7U
+
+      - Services:
+        - Emby:
+            icon: emby.png
+            href: http://media.sushiraccoon.com
+            ping: 192.168.134.199
+            widget:
+              type: emby
+              url: http://10.0.0.110
+              key: a9c17419c7c04bbdb906fcb23b05b15e
+              enableBlocks: true # optional, defaults to false
+              enableNowPlaying: true # optional, defaults to true
+        - Immich:
+            icon: immich.png
+            href: http://10.0.0.20:30041
+            ping: 10.0.0.20
+            widget:
+              type: immich
+              url: http://10.0.0.20:30041
+              key: vUEMoEhnyckdbtuAWSaJwt4DOHol5YNAgDOXXqfWI
+        - Qbittorrent:
+            icon: qbittorrent.png
+            ping: 10.0.0.10
+            widget:
+              type: qbittorrent
+              url: http://10.0.0.10:8080
+              username: admin
+              password: RBJv9h9TX
+        - Minecraft:
+            icon: minecraft.png
+            widget:
+              type: minecraft
+              url: udp://10.0.0.10:25565
+
+  widgets.yaml: |
+    - resources:
+        backend: resources
+        expanded: true
+        cpu: true
+        memory: true
+    - openmeteo:
+        label: Arad # optional
+        latitude: 46.1833
+        longitude: 21.3167
+        timezone: Europe/Bucharest # optional
+        units: metric # or imperial
+        cache: 5 # Time in minutes to cache API responses, to stay within limits
+    - openmeteo:
+        label: Cuneo # optional
+        latitude: 44.3907
+        longitude: 7.5483
+        timezone: Europe/Rome # optional
+        units: metric # or imperial
+        cache: 5 # Time in minutes to cache API responses, to stay within limits
+    - openmeteo:
+        label: Torino # optional
+        latitude: 45.0705
+        longitude: 7.6868
+        timezone: Europe/Rome # optional
+        units: metric # or imperial
+        cache: 5 # Time in minutes to cache API responses, to stay within limits
+    - search:
+        provider: google
+        target: _blank
+  docker.yaml: ""
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+      - pods
+      - nodes
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - traefik.containo.us
+    resources:
+      - ingressroutes
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - nodes
+      - pods
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: homepage
+subjects:
+  - kind: ServiceAccount
+    name: homepage
+    namespace: homepage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+  annotations:
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.111
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: homepage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: homepage
+    spec:
+      serviceAccountName: homepage
+      automountServiceAccountToken: true
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: true
+      containers:
+        - name: homepage
+          image: "ghcr.io/gethomepage/homepage:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /app/config/custom.js
+              name: homepage-pvc
+              subPath: custom.js
+            - mountPath: /app/config/custom.css
+              name: homepage-pvc
+              subPath: custom.css
+            - mountPath: /app/config/bookmarks.yaml
+              name: homepage-pvc
+              subPath: bookmarks.yaml
+            - mountPath: /app/config/docker.yaml
+              name: homepage-pvc
+              subPath: docker.yaml
+            - mountPath: /app/config/kubernetes.yaml
+              name: homepage-pvc
+              subPath: kubernetes.yaml
+            - mountPath: /app/config/services.yaml
+              name: homepage-pvc
+              subPath: services.yaml
+            - mountPath: /app/config/settings.yaml
+              name: homepage-pvc
+              subPath: settings.yaml
+            - mountPath: /app/config/widgets.yaml
+              name: homepage-pvc
+              subPath: widgets.yaml
+            - mountPath: /app/config/logs
+              name: homepage-pvc
+      volumes:
+        - name: homepage-pvc
+          configMap:
+            name: homepage
+        - name: logs
+          emptyDir: {}
+---
