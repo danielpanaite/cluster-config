@@ -55,6 +55,8 @@ spec:
         ports:
           - containerPort: 8080
         volumeMounts:
+          - mountPath: "/opt/recipes/mediafiles"
+            name: recipes-vol
           - mountPath: "/config"
             name: recipes-vol
         env:
