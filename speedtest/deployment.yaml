@@ -53,7 +53,7 @@ spec:
             claimName: speedtest-local-pvc
       containers:
       - name: speedtest
-        image: ghcr.io/alexjustesen/speedtest-tracker:v0.14.2
+        image: ghcr.io/alexjustesen/speedtest-tracker:v0.14.7
         ports:
           - containerPort: 80
           - containerPort: 443
