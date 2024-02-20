@@ -22,7 +22,7 @@ metadata:
   namespace: recipes
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.125
+  loadBalancerIP: 10.0.0.112
   ports:
   - port: 80
     targetPort: 8080

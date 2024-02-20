@@ -27,7 +27,7 @@ spec:
       targetPort: 8920
       name: https
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.110
+  loadBalancerIP: 10.0.0.111
 ---
 apiVersion: apps/v1
 kind: Deployment
