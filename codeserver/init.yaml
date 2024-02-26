@@ -1,0 +1,48 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: codeserver
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: codeserver-local-pv
+  labels:
+    app: codeserver
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /home/sushi/local-storage/codeserver
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - it-sushi-1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codeserver-local-pvc
+  namespace: codeserver
+  labels:
+    app: codeserver
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi 
+  selector:
+    matchLabels:
+      app: codeserver
+  storageClassName: local-storage 
+---
