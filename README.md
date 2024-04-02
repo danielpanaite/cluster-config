@@ -136,3 +136,11 @@ Apply manifest for v1.9.4
 cd nginx-ingress
 kubectl apply -f deployment.yaml
 ```
+
+## Useful k8s commands:
+
+- Reclaim used PV:
+
+```bash
+kubectl patch pv pv-name -p '{"spec":{"claimRef": null}}'
+```
