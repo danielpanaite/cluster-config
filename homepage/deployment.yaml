@@ -47,6 +47,9 @@ data:
         columns: 2
       Services:
       Media:
+      VPN:
+        style: row
+        columns: 3
   custom.css: ""
   custom.js: ""
   bookmarks.yaml: ""
@@ -83,7 +86,7 @@ data:
             widget:
               type: truenas
               url: http://10.0.0.20
-              key: secret.yaml
+              key: 
 
       - Services:
         - Technitium:
@@ -91,7 +94,7 @@ data:
             href: http://dns.sushiraccoon.com
             widget:
               type: customapi
-              url: http://10.0.0.101:80/api/dashboard/stats/get?token=secret.yaml&type=LastDay&utc=true
+              url: http://10.0.0.101:80/api/dashboard/stats/get?token=&type=LastDay&utc=true
               method: GET
               mappings:
                 - field: 
@@ -114,22 +117,6 @@ data:
                       stats: totalBlocked
                   label: Blocked
                   type: number
-        - Wireguard:
-            icon: https://i.imgur.com/Npgm4jf.png
-            href: http://10.0.0.20:51821
-            widget:
-              type: customapi
-              url: http://10.0.0.20:51821/api/wireguard/client
-              method: GET
-              mappings:
-                - field:
-                    0: latestHandshakeAt
-                  label: Last Connection
-                  format: relativeDate
-                - field:
-                    0: transferTx
-                  label: Bytes Tx
-                  format: bytes
         - Gitea:
             icon: https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Gitea_Logo.svg/640px-Gitea_Logo.svg.png
             href: http://git.sushiraccoon.com
@@ -148,7 +135,7 @@ data:
               url: http://10.0.0.112/api/space/
               method: GET
               headers:
-                Authorization: Bearer secret.yaml
+                Authorization: 
               mappings:
                 - field: 
                     0: name
@@ -178,7 +165,7 @@ data:
             widget:
               type: emby
               url: http://10.0.0.111
-              key: secret.yaml
+              key: 
               enableBlocks: true # optional, defaults to false
               enableNowPlaying: true # optional, defaults to true
         - Immich:
@@ -187,13 +174,84 @@ data:
             widget:
               type: immich
               url: http://10.0.0.20:30041
-              key: secret.yaml
+              key: 
         - Minecraft:
             icon: minecraft.png
             href: http://10.0.0.10:8181/minecraft
             widget:
               type: minecraft
               url: udp://10.0.0.10:25565
+
+      - VPN:
+        - Wireguard:
+            icon: https://i.imgur.com/Npgm4jf.png
+            href: http://10.0.0.20:51821
+            widget:
+              type: customapi
+              url: http://10.0.0.20:51821/api/wireguard/client
+              method: GET
+              mappings:
+                - field:
+                    0: name
+                  label: Client
+                - field:
+                    0: latestHandshakeAt
+                  label: Last Seen
+                  format: relativeDate
+                - field:
+                    0: transferTx
+                  label: Bytes Tx
+                  format: bytes
+                - field:
+                    0: transferRx
+                  label: Bytes Rx
+                  format: bytes
+        - Wireguard:
+            icon: https://i.imgur.com/Npgm4jf.png
+            href: http://10.0.0.20:51821
+            widget:
+              type: customapi
+              url: http://10.0.0.20:51821/api/wireguard/client
+              method: GET
+              mappings:
+                - field:
+                    1: name
+                  label: Client
+                - field:
+                    1: latestHandshakeAt
+                  label: Last Seen
+                  format: relativeDate
+                - field:
+                    1: transferTx
+                  label: Bytes Tx
+                  format: bytes
+                - field:
+                    1: transferRx
+                  label: Bytes Rx
+                  format: bytes
+        - Wireguard:
+            icon: https://i.imgur.com/Npgm4jf.png
+            href: http://10.0.0.20:51821
+            widget:
+              type: customapi
+              url: http://10.0.0.20:51821/api/wireguard/client
+              method: GET
+              mappings:
+                - field:
+                    2: name
+                  label: Client
+                - field:
+                    2: latestHandshakeAt
+                  label: Last Seen
+                  format: relativeDate
+                - field:
+                    2: transferTx
+                  label: Bytes Tx
+                  format: bytes
+                - field:
+                    2: transferRx
+                  label: Bytes Rx
+                  format: bytes
   widgets.yaml: |
     - openmeteo:
         label: Arad # optional
