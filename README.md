@@ -95,7 +95,7 @@ sudo apt-mark hold kubelet kubeadm kubectl
 
 Pod cidr 192.168 specified for calico to work
 ```bash
-sudo kubeadm init --kubernetes-version=1.28.3 --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock
+sudo kubeadm init --kubernetes-version=1.28.8 --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
