@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: minecraft
+data:
+  MYSQL_ROOT_PASSWORD: g2nz2l1c1
+  MYSQL_DATABASE: plan
+  MYSQL_USER: plan
+  MYSQL_PASSWORD: minecraftplanstats
+  TZ: Europe/Rome
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: minecraft
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.202
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: mysql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: minecraft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      volumes:
+        - name: mysql-vol
+          persistentVolumeClaim:
+            claimName: minecraft-mysql-local-pvc
+      containers:
+      - name: mysql
+        image: mysql:latest
+        ports:
+          - containerPort: 3306
+        volumeMounts:
+          - mountPath: "/var/lib/mysql"
+            name: mysql-vol
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_PASSWORD
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: TZ
+---

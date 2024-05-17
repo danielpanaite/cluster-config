@@ -1,0 +1,113 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minecraft-config
+  namespace: minecraft
+data:
+  EULA: "TRUE"
+  TYPE: "PAPER"
+  PAPERBUILD: "79"
+  INIT_MEMORY: "1G"
+  MAX_MEMORY: "4G"
+  VERSION: "1.20.6"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minecraft
+  namespace: minecraft
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.126
+  ports:
+  - port: 80
+    targetPort: 8282
+    name: http
+  - port: 8100
+    targetPort: 8100
+    name: bluemap
+  - port: 19132
+    targetPort: 19132
+    name: bedrock
+    protocol: UDP
+  - port: 25565
+    targetPort: 25565
+    name: java
+  selector:
+    app: minecraft
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minecraft-plan
+  namespace: minecraft
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.127
+  ports:
+  - port: 80
+    targetPort: 8804
+    name: http
+  selector:
+    app: minecraft
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minecraft
+  namespace: minecraft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minecraft
+  template:
+    metadata:
+      labels:
+        app: minecraft
+    spec:
+      volumes:
+        - name: minecraft-vol
+          persistentVolumeClaim:
+            claimName: minecraft-local-pvc
+      containers:
+      - name: minecraft
+        image: itzg/minecraft-server
+        ports:
+          - containerPort: 8282
+          - containerPort: 8804
+          - containerPort: 8100
+          - containerPort: 19132
+            protocol: UDP
+          - containerPort: 25565
+        volumeMounts:
+          - mountPath: "/data"
+            name: minecraft-vol
+        env:
+        - name: EULA
+          valueFrom:
+            configMapKeyRef:
+              name: minecraft-config
+              key: EULA
+        - name: VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: minecraft-config
+              key: VERSION
+        - name: TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: minecraft-config
+              key: TYPE
+        - name: INIT_MEMORY
+          valueFrom:
+            configMapKeyRef:
+              name: minecraft-config
+              key: INIT_MEMORY
+        - name: MAX_MEMORY
+          valueFrom:
+            configMapKeyRef:
+              name: minecraft-config
+              key: MAX_MEMORY
+---

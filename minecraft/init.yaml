@@ -1,0 +1,90 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minecraft
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minecraft-local-pv
+  labels:
+    app: minecraft
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /home/sushi/minecraft
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - it-sushi-1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minecraft-local-pvc
+  namespace: minecraft
+  labels:
+    app: minecraft
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi 
+  selector:
+    matchLabels:
+      app: minecraft
+  storageClassName: local-storage 
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minecraft-mysql-local-pv
+  labels:
+    app: mysql
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /home/sushi/local-storage/mysql-minecraft
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - it-sushi-1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minecraft-mysql-local-pvc
+  namespace: minecraft
+  labels:
+    app: mysql
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi 
+  selector:
+    matchLabels:
+      app: mysql
+  storageClassName: local-storage
+---
