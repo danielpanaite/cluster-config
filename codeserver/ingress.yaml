@@ -12,7 +12,7 @@ spec:
   tls:
   - hosts:
     - code.sushiraccoon.com
-    secretName: recipes-tls
+    secretName: codeserver-tls
   rules:
   - host: code.sushiraccoon.com
     http:

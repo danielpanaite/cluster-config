@@ -16,7 +16,7 @@ metadata:
   namespace: codeserver
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.125
+  loadBalancerIP: 10.0.0.128
   ports:
   - port: 80
     targetPort: 8443
@@ -70,13 +70,13 @@ spec:
         - name: PASSWORD
           valueFrom:
             secretKeyRef:
-              name: codeserver-password
+              name: codeserver-pass
               key: PASSWORD
               optional: false
         - name: SUDO_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: codeserver-password
+              name: codeserver-sudo
               key: SUDO_PASSWORD
               optional: false
 ---
