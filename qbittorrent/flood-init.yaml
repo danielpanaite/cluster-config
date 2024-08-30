@@ -1,0 +1,85 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: flood-local-pv
+  labels:
+    app: flood
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /home/sushi/local-storage/flood/data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - it-sushi-1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: flood-config-local-pv
+  labels:
+    app: flood
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /home/sushi/local-storage/flood/config
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - it-sushi-1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flood-local-pvc
+  namespace: qbittorrent
+  labels:
+    app: flood
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi 
+  selector:
+    matchLabels:
+      app: flood
+  storageClassName: local-storage
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flood-config-local-pvc
+  namespace: qbittorrent
+  labels:
+    app: flood
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi 
+  selector:
+    matchLabels:
+      app: flood
+  storageClassName: local-storage
+---
