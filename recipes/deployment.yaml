@@ -51,7 +51,7 @@ spec:
             claimName: recipes-pvc
       containers:
       - name: recipes
-        image: vabene1111/recipes:1.5.15
+        image: vabene1111/recipes:1.5.19
         ports:
           - containerPort: 8080
         volumeMounts:
