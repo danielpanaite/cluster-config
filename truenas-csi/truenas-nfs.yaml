@@ -35,12 +35,15 @@ driver:
     zfs:
       datasetParentName: it-nas-6tb/k8s/volumes
       detachedSnapshotsDatasetParentName: storage/k8s/nfs/s
+      datasetProperties:
+        "org.freenas:description": "{{ parameters.[csi.storage.k8s.io/pvc/namespace] }}/{{ parameters.[csi.storage.k8s.io/pvc/name] }}"
       datasetEnableQuotas: true
       datasetEnableReservation: false
       datasetPermissionsMode: "0777"
       datasetPermissionsUser: 0
       datasetPermissionsGroup: 0
     nfs:
+      shareCommentTemplate: "{{ parameters.[csi.storage.k8s.io/pvc/namespace] }}-{{ parameters.[csi.storage.k8s.io/pvc/name] }}"
       shareHost: 10.0.0.20
       shareAlldirs: false
       shareAllowedHosts: []
