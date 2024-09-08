@@ -20,13 +20,45 @@ echo \
   "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt update
-sudo apt install docker.io -y
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 ```
 
 - Docker post install
 
 ```bash
 sudo usermod -aG docker $USER
+```
+
+- Install Docker CRI
+
+```bash
+git clone https://github.com/Mirantis/cri-dockerd.git
+sudo apt install make
+cd cri-dockerd
+make cri-dockerd
+mkdir -p /usr/local/bin
+sudo install -o root -g root -m 0755 cri-dockerd /usr/local/bin/cri-dockerd
+sudo install packaging/systemd/* /etc/systemd/system
+sudo sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now cri-docker.socket
+```
+
+Edit the sandbox pause container:
+```bash
+sudo nano /etc/systemd/system/cri-docker.service
+```
+Add --pod-infra-container-image=registry.k8s.io/pause:3.10 in the ExecStart line
+
+Reload the systemd daemon:
+```bash
+sudo systemctl daemon-reload
+```
+
+Restart cri-dockerd service
+```bash
+sudo systemctl restart cri-docker
+
 ```
 
 - Install GOlang
@@ -55,7 +87,7 @@ sudo apt-mark hold kubelet kubeadm kubectl
 - Init cluster with kubeadm
 
 ```bash
-sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --skip-phases=addon/kube-proxy
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --skip-phases=addon/kube-proxy --cri-socket=unix:///var/run/cri-dockerd.sock
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
@@ -77,7 +109,13 @@ rm cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
 - Install Cilium CNI
 
 ```bash
-helm install cilium cilium/cilium --version 1.16.1 --namespace kube-system -f values.yaml
+cilium install --version v1.16.1 --set kubeProxyReplacement=true --set k8sServiceHost=10.0.2.80 --set k8sServicePort=6443 --set l2announcements.enabled=true --set l2announcements.leaseDuration="3s" --set l2announcements.leaseRenewDeadline="1s" --set l2announcements.leaseRetryPeriod="500ms" --set externalIPs.enabled=true --set operator.replicas=1 --set ipam.operator.clusterPoolIPv4PodCIDRList=10.244.0.0/16
+```
+
+- Enable Hubble UI
+
+```bash
+cilium hubble enable --ui
 ```
 
 - Install Nginx Ingress
@@ -85,6 +123,7 @@ helm install cilium cilium/cilium --version 1.16.1 --namespace kube-system -f va
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/baremetal/deploy.yaml
 ```
+Edit the service to type LoadBalancer and assign IP
 
 ## Useful k8s commands:
 
@@ -101,4 +140,21 @@ alias k="kubectl"
 alias po="kubectl get po -A"
 alias svc="kubectl get svc -A"
 alias wide="kubectl get po -A -o wide"
+```
+
+- #### Sealed secrets commands:
+
+```bash
+kubeseal -f secret.yaml -w sealedsecret.yaml
+kubectl create -f sealedsecret.yaml
+```
+To get the secret values:
+```bash
+kubectl get secret secret -o yaml
+```
+
+- #### DDNS crontab entry:
+
+```bash
+*/10 * * * * /home/sushi/ddns >/dev/null 2>&1
 ```
