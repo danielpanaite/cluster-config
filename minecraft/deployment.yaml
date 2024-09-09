@@ -17,9 +17,11 @@ kind: Service
 metadata:
   name: minecraft
   namespace: minecraft
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.126
+  loadBalancerIP: 10.0.0.111
   ports:
   - port: 80
     targetPort: 8282
@@ -42,9 +44,11 @@ kind: Service
 metadata:
   name: minecraft-plan
   namespace: minecraft
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.127
+  loadBalancerIP: 10.0.0.126
   ports:
   - port: 80
     targetPort: 8804
@@ -70,7 +74,7 @@ spec:
       volumes:
         - name: minecraft-vol
           persistentVolumeClaim:
-            claimName: minecraft-local-pvc
+            claimName: minecraft-truenas-pvc
       containers:
       - name: minecraft
         image: itzg/minecraft-server

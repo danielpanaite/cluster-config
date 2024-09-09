@@ -5,10 +5,8 @@ metadata:
   name: mysql-config
   namespace: minecraft
 data:
-  MYSQL_ROOT_PASSWORD: g2nz2l1c1
   MYSQL_DATABASE: plan
   MYSQL_USER: plan
-  MYSQL_PASSWORD: minecraftplanstats
   TZ: Europe/Rome
 ---
 apiVersion: v1
@@ -16,6 +14,8 @@ kind: Service
 metadata:
   name: mysql
   namespace: minecraft
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
   loadBalancerIP: 10.0.0.202
@@ -43,7 +43,7 @@ spec:
       volumes:
         - name: mysql-vol
           persistentVolumeClaim:
-            claimName: minecraft-mysql-local-pvc
+            claimName: minecraftmysql-truenas-pvc
       containers:
       - name: mysql
         image: mysql:latest
@@ -55,9 +55,10 @@ spec:
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
-            configMapKeyRef:
-              name: mysql-config
+            secretKeyRef:
+              name: minecraft-secret
               key: MYSQL_ROOT_PASSWORD
+              optional: false
         - name: MYSQL_DATABASE
           valueFrom:
             configMapKeyRef:
@@ -70,9 +71,10 @@ spec:
               key: MYSQL_USER
         - name: MYSQL_PASSWORD
           valueFrom:
-            configMapKeyRef:
-              name: mysql-config
+            secretKeyRef:
+              name: minecraft-secret
               key: MYSQL_PASSWORD
+              optional: false
         - name: TZ
           valueFrom:
             configMapKeyRef:
