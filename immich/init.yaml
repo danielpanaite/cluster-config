@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: immich
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-truenas-pvc
+  namespace: immich
+  annotations:
+    storageClassName: "nfs-csi"
+  labels:
+    app: immich
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immichpostgres-truenas-pvc
+  namespace: immich
+  annotations:
+    storageClassName: "nfs-csi"
+  labels:
+    app: postgres
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
