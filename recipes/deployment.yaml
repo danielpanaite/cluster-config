@@ -9,20 +9,19 @@ data:
   PGID: "3000"
   SECRET_KEY: recipes
   DB_ENGINE: "django.db.backends.postgresql"
-  POSTGRES_HOST: "10.0.0.201"
+  POSTGRES_HOST: "10.0.0.200"
   POSTGRES_PORT: "5432"
-  POSTGRES_DB: recipes
-  POSTGRES_USER: recipes
-  POSTGRES_PASSWORD: recipes
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: recipes
   namespace: recipes
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.112
+  loadBalancerIP: 10.0.0.124
   ports:
   - port: 80
     targetPort: 8080
@@ -48,7 +47,7 @@ spec:
       volumes:
         - name: recipes-vol
           persistentVolumeClaim:
-            claimName: recipes-pvc
+            claimName: recipes-truenas-pvc
       containers:
       - name: recipes
         image: vabene1111/recipes:1.5.19
@@ -92,17 +91,20 @@ spec:
               key: POSTGRES_PORT
         - name: POSTGRES_DB
           valueFrom:
-            configMapKeyRef:
-              name: recipes-config
+            secretKeyRef:
+              name: recipes-secret
               key: POSTGRES_DB
+              optional: false
         - name: POSTGRES_USER
           valueFrom:
-            configMapKeyRef:
-              name: recipes-config
+            secretKeyRef:
+              name: recipes-secret
               key: POSTGRES_USER
+              optional: false
         - name: POSTGRES_PASSWORD
           valueFrom:
-            configMapKeyRef:
-              name: recipes-config
+            secretKeyRef:
+              name: recipes-secret
               key: POSTGRES_PASSWORD
+              optional: false
 ---
