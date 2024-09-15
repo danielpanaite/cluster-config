@@ -1,0 +1,82 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: livebook-config
+  namespace: livebook
+data:
+  PUID: "3000"
+  PGID: "3000"
+  LIVEBOOK_PORT: "80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: livebook
+  namespace: livebook
+  labels:
+    loadbalancer: cilium
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.127
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  - port: 8081
+    targetPort: 8081
+    name: iframe
+  selector:
+    app: livebook
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livebook
+  namespace: livebook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: livebook
+  template:
+    metadata:
+      labels:
+        app: livebook
+    spec:
+      volumes:
+        - name: livebook-vol
+          persistentVolumeClaim:
+            claimName: livebook-truenas-pvc
+      containers:
+      - name: livebook
+        image: ghcr.io/livebook-dev/livebook:0.14.0
+        ports:
+          - containerPort: 80
+          - containerPort: 8081
+        volumeMounts:
+          - mountPath: "/data"
+            name: livebook-vol
+        env:
+        - name: PUID
+          valueFrom:
+            configMapKeyRef:
+              name: livebook-config
+              key: PUID
+        - name: PGID
+          valueFrom:
+            configMapKeyRef:
+              name: livebook-config
+              key: PGID
+        - name: LIVEBOOK_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: livebook-config
+              key: LIVEBOOK_PORT
+        - name: LIVEBOOK_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: livebook-secret
+              key: LIVEBOOK_PASSWORD
+              optional: false
+---
