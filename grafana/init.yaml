@@ -7,7 +7,7 @@ metadata:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: grafana-local-pvc
+  name: grafana-truenas-pvc
   namespace: grafana
   annotations:
     storageClassName: "nfs-csi"
@@ -16,8 +16,8 @@ metadata:
 spec:
   storageClassName: nfs-csi
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
-      storage: 10Gi
+      storage: 5Gi
 ---

@@ -21,7 +21,7 @@ spec:
           - 0
       containers:
         - name: grafana
-          image: grafana/grafana:10.2.2
+          image: grafana/grafana:11.2.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
@@ -55,20 +55,22 @@ spec:
       volumes:
         - name: grafana-pv
           persistentVolumeClaim:
-            claimName: grafana-local-pvc
+            claimName: grafana-truenas-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: grafana
   namespace: grafana
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
   loadBalancerIP: 10.0.0.120
   selector:
     app: grafana
   ports:
-    - port: 3000
+    - port: 80
       protocol: TCP
       targetPort: http-grafana
   sessionAffinity: None
