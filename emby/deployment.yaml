@@ -14,6 +14,8 @@ kind: Service
 metadata:
   name: emby
   namespace: emby
+  labels:
+    loadbalancer: cilium
 spec:
   selector:
     app: emby
@@ -27,7 +29,7 @@ spec:
       targetPort: 8920
       name: https
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.111
+  loadBalancerIP: 10.0.0.110
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -49,10 +51,10 @@ spec:
       volumes:
         - name: emby-vol
           persistentVolumeClaim:
-            claimName: emby-local-pvc
+            claimName: emby-truenas-pvc
         - name: embymedia-vol
           persistentVolumeClaim:
-            claimName: embymedia-local-pvc
+            claimName: embymedia-truenas-pvc
       containers:
       - name: emby
         image: lscr.io/linuxserver/emby

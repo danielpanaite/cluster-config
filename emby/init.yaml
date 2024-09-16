@@ -7,14 +7,14 @@ metadata:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: emby-local-pvc
+  name: emby-truenas-pvc
   namespace: emby
   labels:
     app: emby
 spec:
   storageClassName: nfs-csi
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
       storage: 10Gi
@@ -22,14 +22,15 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: embymedia-local-pvc
+  name: embymedia-truenas-pvc
   namespace: emby
   labels:
     app: emby
 spec:
   storageClassName: nfs-csi
+  volumeName: pvc-51f7c0cb-8ad7-44c3-a065-b3d283c2da99
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
       storage: 500Gi
