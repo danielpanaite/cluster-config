@@ -11,10 +11,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - assistant.sushiraccoon.com
+    - home.sushiraccoon.com
     secretName: homeassistant-tls
   rules:
-  - host: assistant.sushiraccoon.com
+  - host: home.sushiraccoon.com
     http:
       paths:
       - path: /

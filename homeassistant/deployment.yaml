@@ -13,6 +13,8 @@ kind: Service
 metadata:
   name: homeassistant
   namespace: homeassistant
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
   loadBalancerIP: 10.0.0.125
@@ -44,7 +46,7 @@ spec:
       volumes:
         - name: homeassistant-vol
           persistentVolumeClaim:
-            claimName: homeassistant-local-pvc
+            claimName: homeassistant-truenas-pvc
       containers:
       - name: homeassistant
         image: ghcr.io/home-assistant/home-assistant:2024.4
