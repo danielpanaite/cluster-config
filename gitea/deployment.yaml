@@ -13,6 +13,8 @@ kind: Service
 metadata:
   name: gitea
   namespace: gitea
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
   loadBalancerIP: 10.0.0.121
@@ -49,13 +51,13 @@ spec:
       volumes:
         - name: giteadata-vol
           persistentVolumeClaim:
-            claimName: giteadata-local-pvc
+            claimName: giteadata-truenas-pvc
         - name: giteaconfig-vol
           persistentVolumeClaim:
-            claimName: giteaconfig-local-pvc
+            claimName: giteaconfig-truenas-pvc
       containers:
       - name: gitea
-        image: gitea/gitea:1.21.1-rootless
+        image: gitea/gitea:1.22.1-rootless
         resources:
           requests:
             memory: "125Mi"

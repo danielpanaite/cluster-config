@@ -7,7 +7,7 @@ metadata:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: giteaconfig-local-pvc
+  name: giteaconfig-truenas-pvc
   namespace: gitea
   annotations:
     storageClassName: "nfs-csi"
@@ -16,7 +16,7 @@ metadata:
 spec:
   storageClassName: nfs-csi
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
       storage: 2Gi
@@ -24,7 +24,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: giteadata-local-pvc
+  name: giteadata-truenas-pvc
   namespace: gitea
   annotations:
     storageClassName: "nfs-csi"
@@ -33,7 +33,7 @@ metadata:
 spec:
   storageClassName: nfs-csi
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
       storage: 10Gi
