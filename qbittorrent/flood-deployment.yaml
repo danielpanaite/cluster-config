@@ -1,4 +1,4 @@
----exit
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,9 +15,11 @@ kind: Service
 metadata:
   name: flood
   namespace: qbittorrent
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.129
+  loadBalancerIP: 10.0.0.123
   selector:
     app: flood
   ports:
@@ -49,10 +51,10 @@ spec:
       volumes:
         - name: flooddata-vol
           persistentVolumeClaim:
-            claimName: flood-local-pvc
+            claimName: flood-truenas-pvc
         - name: floodconfig-vol
           persistentVolumeClaim:
-            claimName: flood-config-local-pvc
+            claimName: floodconfig-truenas-pvc
       containers:
       - name: flood
         image: jesec/flood:4.8.2
@@ -93,3 +95,4 @@ spec:
             name: flooddata-vol
           - mountPath: /config
             name: floodconfig-vol
+---

@@ -5,86 +5,36 @@ metadata:
   name: qbittorrent
 ---
 apiVersion: v1
-kind: PersistentVolume
+kind: PersistentVolumeClaim
 metadata:
-  name: qbittorrent-local-pv
+  name: qbittorrent-truenas-pvc
+  namespace: qbittorrent
+  annotations:
+    storageClassName: "nfs-csi"
   labels:
     app: qbittorrent
 spec:
-  capacity:
-    storage: 300Gi
+  storageClassName: nfs-csi
   accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
-  local:
-    path: /home/sushi/local-storage/qbittorrent
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - it-sushi-1
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: qbittorrent-config-local-pv
-  labels:
-    app: qbittorrent
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
-  local:
-    path: /home/sushi/local-storage/qbittorrent-config
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - it-sushi-1
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 300Gi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: qbittorrent-local-pvc
+  name: qbittorrentconfig-truenas-pvc
   namespace: qbittorrent
+  annotations:
+    storageClassName: "nfs-csi"
   labels:
     app: qbittorrent
 spec:
+  storageClassName: nfs-csi
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
-      storage: 300Gi 
-  selector:
-    matchLabels:
-      app: qbittorrent
-  storageClassName: local-storage
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: qbittorrent-config-local-pvc
-  namespace: qbittorrent
-  labels:
-    app: qbittorrent
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi 
-  selector:
-    matchLabels:
-      app: qbittorrent
-  storageClassName: local-storage
+      storage: 1Gi
 ---

@@ -13,6 +13,8 @@ kind: Service
 metadata:
   name: qbittorrent
   namespace: qbittorrent
+  labels:
+    loadbalancer: cilium
 spec:
   type: LoadBalancer
   loadBalancerIP: 10.0.0.122
@@ -54,10 +56,10 @@ spec:
       volumes:
         - name: qbittorrentdata-vol
           persistentVolumeClaim:
-            claimName: qbittorrent-local-pvc
+            claimName: qbittorrent-truenas-pvc
         - name: qbittorrentconfig-vol
           persistentVolumeClaim:
-            claimName: qbittorrent-config-local-pvc
+            claimName: qbittorrentconfig-truenas-pvc
       containers:
       - name: qbittorrent
         image: lscr.io/linuxserver/qbittorrent:latest

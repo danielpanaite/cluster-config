@@ -1,85 +1,35 @@
 ---
 apiVersion: v1
-kind: PersistentVolume
+kind: PersistentVolumeClaim
 metadata:
-  name: flood-local-pv
+  name: flood-truenas-pvc
+  namespace: qbittorrent
+  annotations:
+    storageClassName: "nfs-csi"
   labels:
     app: flood
 spec:
-  capacity:
-    storage: 10Gi
+  storageClassName: nfs-csi
   accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
-  local:
-    path: /home/sushi/local-storage/flood/data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - it-sushi-1
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: flood-config-local-pv
-  labels:
-    app: flood
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
-  local:
-    path: /home/sushi/local-storage/flood/config
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - it-sushi-1
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: flood-local-pvc
+  name: floodconfig-truenas-pvc
   namespace: qbittorrent
+  annotations:
+    storageClassName: "nfs-csi"
   labels:
     app: flood
 spec:
+  storageClassName: nfs-csi
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
-      storage: 10Gi 
-  selector:
-    matchLabels:
-      app: flood
-  storageClassName: local-storage
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: flood-config-local-pvc
-  namespace: qbittorrent
-  labels:
-    app: flood
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi 
-  selector:
-    matchLabels:
-      app: flood
-  storageClassName: local-storage
+      storage: 1Gi
 ---
