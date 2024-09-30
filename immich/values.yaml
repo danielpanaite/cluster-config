@@ -4,12 +4,12 @@ env:
   DB_HOSTNAME: 10.0.0.201
   DB_USERNAME: "immich"
   DB_DATABASE_NAME: "immich"
-  DB_PASSWORD: "password"
+  DB_PASSWORD: "replacewithpasswordfromsecret"
   IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
   UPLOAD_LOCATION: "./library"
 
 image:
-  tag: v1.115.0
+  tag: v1.116.2
 
 immich:
   metrics:
