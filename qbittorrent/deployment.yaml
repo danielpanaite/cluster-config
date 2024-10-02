@@ -62,7 +62,7 @@ spec:
             claimName: qbittorrentconfig-truenas-pvc
       containers:
       - name: qbittorrent
-        image: lscr.io/linuxserver/qbittorrent:latest
+        image: lscr.io/linuxserver/qbittorrent:4.6.7-r0-ls353
         resources:
           requests:
             memory: "125Mi"
