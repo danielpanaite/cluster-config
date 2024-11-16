@@ -1,0 +1,57 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kitchenowl
+  namespace: kitchenowl
+  labels:
+    loadbalancer: cilium
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.128
+  selector:
+    app: kitchenowl
+  ports:
+    - protocol: TCP
+      port: 80
+      name: http
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kitchenowl
+  namespace: kitchenowl
+  labels:
+    app: kitchenowl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kitchenowl
+  template:
+    metadata:
+      labels:
+        app: kitchenowl
+    spec:
+      volumes:
+        - name: kitchenowl-vol
+          persistentVolumeClaim:
+            claimName: kitchenowl-truenas-pvc
+      containers:
+      - name: kitchenowl
+        image: tombursch/kitchenowl:v0.5.2
+        env:
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kitchenowl-secret
+              key: JWT_SECRET_KEY
+
+        ports:
+        - containerPort: 8080
+
+        volumeMounts:
+          - mountPath: /data
+            name: kitchenowl-vol
+---
