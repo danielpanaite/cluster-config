@@ -158,3 +158,23 @@ kubectl get secret secret -o yaml
 ```bash
 */10 * * * * /home/sushi/ddns >/dev/null 2>&1
 ```
+
+- #### Mount smb share:
+
+```bash
+mount -t cifs -o username=sushi //10.0.0.20/share /home/user/share
+```
+fstab:
+```bash
+//10.0.0.20/media /home/ cifs uid=1000,iocharset=utf8,file_mode=0776,dir_mode=0776,noperm 0 0
+```
+
+- #### Mount nfs share:
+
+```bash
+sudo mount -t nfs 10.0.0.20:/mnt/it-nas-6tb/volume /home/user/share
+```
+fstab:
+```bash
+10.0.0.20:/mnt/it-nas-6tb/k8s/volumes/ /home/  nfs defaults 0 0
+```
