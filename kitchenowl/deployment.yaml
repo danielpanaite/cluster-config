@@ -40,7 +40,7 @@ spec:
             claimName: kitchenowl-truenas-pvc
       containers:
       - name: kitchenowl
-        image: tombursch/kitchenowl:v0.5.2
+        image: tombursch/kitchenowl:v0.6.4
         env:
         - name: JWT_SECRET_KEY
           valueFrom:
