@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: memos
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: memos-truenas-pvc
+  namespace: memos
+  annotations:
+    storageClassName: "nfs-csi"
+  labels:
+    app: memos
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 25Gi
+---
