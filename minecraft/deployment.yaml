@@ -7,10 +7,10 @@ metadata:
 data:
   EULA: "TRUE"
   TYPE: "PAPER"
-  PAPERBUILD: "79"
+  PAPERBUILD: "178"
   INIT_MEMORY: "1G"
   MAX_MEMORY: "4G"
-  VERSION: "1.20.6"
+  VERSION: "1.21.4"
 ---
 apiVersion: v1
 kind: Service
@@ -26,13 +26,6 @@ spec:
   - port: 80
     targetPort: 8282
     name: http
-  - port: 8100
-    targetPort: 8100
-    name: bluemap
-  - port: 19132
-    targetPort: 19132
-    name: bedrock
-    protocol: UDP
   - port: 25565
     targetPort: 25565
     name: java
@@ -81,9 +74,6 @@ spec:
         ports:
           - containerPort: 8282
           - containerPort: 8804
-          - containerPort: 8100
-          - containerPort: 19132
-            protocol: UDP
           - containerPort: 25565
         volumeMounts:
           - mountPath: "/data"
