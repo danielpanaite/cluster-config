@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vaultwarden
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vaultwarden-truenas-pvc
+  namespace: vaultwarden
+  annotations:
+    storageClassName: "nfs-csi"
+  labels:
+    app: vaultwarden
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---

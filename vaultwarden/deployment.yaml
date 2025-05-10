@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vaultwarden-config
+  namespace: vaultwarden
+data:
+  DOMAIN: "https://vault.sushiraccoon.com"
+  ADMIN_TOKEN: xxx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultwarden
+  namespace: vaultwarden
+  labels:
+    loadbalancer: cilium
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.113
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  selector:
+    app: vaultwarden
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultwarden
+  namespace: vaultwarden
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vaultwarden
+  template:
+    metadata:
+      labels:
+        app: vaultwarden
+    spec:
+      volumes:
+        - name: vaultwarden-vol
+          persistentVolumeClaim:
+            claimName: vaultwarden-truenas-pvc
+      containers:
+      - name: vaultwarden
+        image: vaultwarden/server:1.33.2
+        ports:
+          - containerPort: 80
+        volumeMounts:
+          - mountPath: "/data"
+            name: vaultwarden-vol
+        env:
+        - name: DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: vaultwarden-config
+              key: DOMAIN
+        - name: ADMIN_TOKEN
+          valueFrom:
+            configMapKeyRef:
+              name: vaultwarden-config
+              key: ADMIN_TOKEN
+---
