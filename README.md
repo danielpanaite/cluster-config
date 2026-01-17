@@ -20,8 +20,8 @@ curl -sfL https://get.k3s.io | sh -s - --disable=traefik --disable=servicelb --w
 
 #### Install k9s and set theme
 ```bash
-LATEST_K9S=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | jq -r .tag_name)
-wget https://github.com/derailed/k9s/releases/download/${LATEST_K9S}/k9s_linux_amd64.deb
+LATEST=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | jq -r .tag_name)
+wget https://github.com/derailed/k9s/releases/download/${LATEST}/k9s_linux_amd64.deb
 sudo apt install ./k9s_linux_amd64.deb
 
 mkdir -p "$HOME/.config/k9s/skins"
@@ -63,4 +63,45 @@ alias svc="kubectl get svc -A"
 alias dep="kubectl get deployment -A"
 alias pvc="kubectl get pvc -A"
 alias wide="kubectl get po -A -o wide"
+alias encrypt="sops encrypt --in-place"
+alias decrypt="sops decrypt --in-place"
+```
+
+#### Configure secrets with SOPS and AGE:
+
+Install sops
+```bash
+LATEST=$(curl -s https://api.github.com/repos/getsops/sops/releases/latest | jq -r .tag_name)
+curl -LO https://github.com/getsops/sops/releases/download/${LATEST}/sops-${LATEST}.linux.amd64
+sudo mv sops-${LATEST}.linux.amd64 /usr/local/bin/sops
+sudo chmod 755 /usr/local/bin/sops
+```
+
+Install age
+```bash
+sudo apt install age
+```
+
+Generate keys with **age**
+```bash
+mkdir .keys && \
+age-keygen -o .keys/age-key.txt && \
+grep '^# public key:' .keys/age-key.txt | awk '{print $4}' > .keys/public-age-key.txt
+```
+
+Env variables for **sops** to fetch the generated **age** keys
+```bash
+export SOPS_AGE_RECIPIENTS=$(<~/.keys/public-age-key.txt)
+export SOPS_AGE_KEY_FILE=~/.keys/age-key.txt
+```
+
+To encrypt and decrypt secrets after config is done
+```bash
+sops encrypt --in-place secret.yaml
+sops decrypt --in-place secret.yaml
+```
+
+Pre-commit command to encrypt staged secrets
+```bash
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'secret.*\.ya?ml$' || true); set -- $files; c=$#; for f; do [ -f "$f" ] && sops -e -i "$f" && git add "$f"; done; if [ "$c" -gt 0 ]; then echo "SOPS encrypted $c file(s)"; fi
 ```
