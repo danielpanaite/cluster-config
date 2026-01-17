@@ -1,15 +1,15 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: memo
-  namespace: memo
+  name: goldilocks-dashboard
+  namespace: goldilocks
 spec:
   defaultBackend:
     service:
-      name: memo
+      name: goldilocks-dashboard
       port:
         number: 80
   ingressClassName: tailscale
   tls:
     - hosts:
-        - memo
+        - goldilocks
