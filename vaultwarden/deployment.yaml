@@ -3,33 +3,15 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: vaultwarden-config
-  namespace: vaultwarden
+  namespace: vault
 data:
-  DOMAIN: "https://vault.sushiraccoon.com"
-  ADMIN_TOKEN: xxx
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: vaultwarden
-  namespace: vaultwarden
-  labels:
-    loadbalancer: cilium
-spec:
-  type: LoadBalancer
-  loadBalancerIP: 10.0.0.113
-  ports:
-  - port: 80
-    targetPort: 80
-    name: http
-  selector:
-    app: vaultwarden
+  DOMAIN: "https://vault.hyrax-ghoul.ts.net"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vaultwarden
-  namespace: vaultwarden
+  namespace: vault
 spec:
   replicas: 1
   selector:
@@ -43,10 +25,17 @@ spec:
       volumes:
         - name: vaultwarden-vol
           persistentVolumeClaim:
-            claimName: vaultwarden-truenas-pvc
+            claimName: vaultwarden
       containers:
       - name: vaultwarden
-        image: vaultwarden/server:1.33.2
+        image: vaultwarden/server:1.35.2
+        resources:
+          requests:
+            cpu: 15m
+            memory: 110M
+          limits:
+            cpu: 100m
+            memory: 300M
         ports:
           - containerPort: 80
         volumeMounts:
@@ -60,7 +49,21 @@ spec:
               key: DOMAIN
         - name: ADMIN_TOKEN
           valueFrom:
-            configMapKeyRef:
-              name: vaultwarden-config
+            secretKeyRef:
+              name: vaultwarden
               key: ADMIN_TOKEN
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultwarden
+  namespace: vault
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  selector:
+    app: vaultwarden
 ---
