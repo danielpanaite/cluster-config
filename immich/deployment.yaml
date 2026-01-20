@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: immich
+  namespace: immich
+data:
+  TZ: 'Asia/Tokyo'
+  DB_HOSTNAME: postgres
+  DB_USERNAME: immich
+  DB_DATABASE_NAME: immich
+  IMMICH_PORT: '2283'
+  REDIS_PORT: '6379'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich
+  template:
+    metadata:
+      labels:
+        app: immich
+    spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
+      volumes:
+        - name: immich-vol
+          persistentVolumeClaim:
+            claimName: immich
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+      containers:
+      - name: immich
+        image: ghcr.io/immich-app/immich-server:v2.4.1
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        ports:
+          - containerPort: 2283
+        volumeMounts:
+          - name: immich-vol
+            mountPath: /data
+          - name: localtime
+            mountPath: /etc/localtime
+            readOnly: true
+        envFrom:
+          - configMapRef:
+              name: immich
+        env:
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres
+                key: POSTGRES_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 2283
+    name: tcp
+  selector:
+    app: immich
+---
