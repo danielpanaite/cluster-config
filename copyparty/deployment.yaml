@@ -1,0 +1,106 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: copyparty
+  namespace: copyparty
+data:
+  PRTY_NO_TLS: "1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: copyparty
+  namespace: copyparty
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: copyparty
+  template:
+    metadata:
+      labels:
+        app: copyparty
+    spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
+      volumes:
+        - name: copyparty-vol
+          persistentVolumeClaim:
+            claimName: copyparty
+        - name: config-vol
+          secret:
+            secretName: copyparty
+      containers:
+      - name: copyparty
+        image: copyparty/ac:1.20.2
+        args:
+          - --sftp-pw
+          - --sftp
+          - "3922"
+          - -c
+          - "/config/secret/config.conf"
+          - --xff-src
+          - "10.42.0.0/16"
+          - --rproxy
+          - "-1"
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 15m
+            memory: 105M
+          limits:
+            cpu: 450m
+            memory: 450M
+        volumeMounts:
+          - name: copyparty-vol
+            mountPath: /w
+            subPath: data
+          - name: copyparty-vol
+            mountPath: /cfg
+            subPath: state
+          - name: config-vol
+            mountPath: /config/secret
+            readOnly: true
+        ports:
+          - containerPort: 3923
+          - containerPort: 3922
+        envFrom:
+          - configMapRef:
+              name: copyparty
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: copyparty
+  namespace: copyparty
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3923
+    name: http
+  selector:
+    app: copyparty
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: copyparty-sftp
+  namespace: copyparty
+  annotations:
+    tailscale.com/hostname: copyparty-sftp
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  ports:
+  - port: 22
+    targetPort: 3922
+    name: sftp
+  selector:
+    app: copyparty
+---
