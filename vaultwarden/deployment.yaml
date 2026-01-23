@@ -22,6 +22,10 @@ spec:
       labels:
         app: vaultwarden
     spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
       volumes:
         - name: vaultwarden-vol
           persistentVolumeClaim:
@@ -29,6 +33,9 @@ spec:
       containers:
       - name: vaultwarden
         image: vaultwarden/server:1.35.2
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
         resources:
           requests:
             cpu: 15m
