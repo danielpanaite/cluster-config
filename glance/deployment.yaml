@@ -1,0 +1,191 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: glance
+  namespace: dashboard
+data:
+  glance.yml: |
+    theme:
+      background-color: 232 23 18
+      contrast-multiplier: 1.2
+      primary-color: 220 83 75
+      positive-color: 105 48 72
+      negative-color: 351 74 73
+
+      disable-picker: false
+      presets:
+        catppuccin-latte:
+          light: true
+          background-color: 220 23 95
+          contrast-multiplier: 1.0
+          primary-color: 220 91 54
+          positive-color: 109 58 40
+          negative-color: 347 87 44
+
+    pages:
+      - name: Home
+        columns:
+          - size: small
+            widgets:
+              - type: weather
+                units: metric
+                hour-format: 24h
+                location: Tokyo, Japan
+
+              - type: markets
+                markets:
+                  - symbol: EURJPY=X
+                    name: EUR-JPY
+
+              - type: to-do
+
+              - type: server-stats
+                servers:
+                  - type: local
+                    name: Services
+
+          - size: full
+            widgets:
+              - type: custom-api
+                title: Seasonal Anime
+                frameless: true
+                cache: 1d
+                url: https://api.jikan.moe/v4/seasons/now
+                template: |
+                  {{ $arr := .JSON.Array "data" }}
+                  <div style="overflow-x: auto; padding: 8px 0;">
+                    <div class="cards-horizontal carousel-items-container" style="display: flex; gap: 16px; padding: 0 8px;">
+                      {{ range $i, $el := $arr }}
+                        {{ if lt $i 15 }}
+                          {{ $image := $el.String "images.jpg.image_url" }}
+                          {{ $score := $el.Float "score" }}
+                          {{ $type := $el.String "type" }}
+                          {{ $episodes := $el.Int "episodes" }}
+                          
+                          <a href="{{ $el.String "url" }}" target="_blank" 
+                            class="card widget-content-frame" 
+                            style="flex: 0 0 auto; width: 150px; min-height: 260px; display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.1); background: var(--card-bg); text-decoration: none;">
+                            
+                            <!-- Thumbnail with Score -->
+                            <div style="height: 190px; overflow: hidden; position: relative;">
+                              <img src="{{ $image }}" alt="{{ $el.String "title" }}"
+                                  style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                                  onerror="this.style.display='none'">
+                              {{ if gt $score 0.0 }}
+                              <div style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.9); color: white; padding: 3px 8px; border-radius: 12px; font-weight: bold; backdrop-filter: blur(4px); font-size: 11px;">
+                                ⭐ {{ $score }}
+                              </div>
+                              {{ end }}
+                            </div>
+                            
+                            <!-- Content -->
+                            <div style="padding: 12px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 70px;">
+                              <div class="size-base color-primary" 
+                                  style="line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; margin-bottom: 8px;">
+                                {{ $el.String "title" }}
+                              </div>
+                              
+                              <div class="size-h6" style="display: flex; flex-direction: column; gap: 4px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                  <span>Type:</span>
+                                  <span>{{ $type }}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                  <span>{{ if $episodes }}{{ $episodes }} Episodes{{ else }}Airing{{ end }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </a>
+                        {{ end }}
+                      {{ end }}
+                    </div>
+                  </div>
+              
+              - type: releases
+                cache: 1d
+                title: Releases
+                collapse-after: 10
+                repositories:
+                  - immich-app/immich
+                  - dani-garcia/vaultwarden
+                  - usememos/memos
+                  - kubernetes-csi/csi-driver-nfs
+                  - FairwindsOps/goldilocks
+                  - tailscale/tailscale
+                  - kubernetes/kubernetes
+          
+      - name: Videos
+        columns:
+          - size: full
+            widgets:
+              - type: videos
+                channels:
+                  - UCXuqSBlHAE6Xw-yeJA0Tunw # Linus Tech Tips
+                  - UCHnyfMqiRRG1u-2MsSQLbXA # Veritasium
+                  - UCauYsudjxKQsgW-i7odNujw # AlienFood
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: glance
+  namespace: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: glance
+  template:
+    metadata:
+      labels:
+        app: glance
+    spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
+      volumes:
+        - name: glance-vol
+          persistentVolumeClaim:
+            claimName: glance
+        - name: glance-config
+          configMap:
+            name: glance
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+      containers:
+      - name: glance
+        image: glanceapp/glance:v0.8.4
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        volumeMounts:
+          - name: glance-config
+            mountPath: /app/config/glance.yml
+            subPath: glance.yml
+            readOnly: true
+          - name: glance-vol
+            mountPath: /app/assets
+            subPath: assets
+          - name: localtime
+            mountPath: /etc/localtime
+            readOnly: true
+        ports:
+          - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: glance
+  namespace: dashboard
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: glance
+---
