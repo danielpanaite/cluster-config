@@ -1,72 +1,57 @@
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: memos-config
-  namespace: memos
-data:
-  PUID: "3000"
-  PGID: "3000"
-  MEMOS_PORT: "80"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: memos
-  namespace: memos
-  labels:
-    loadbalancer: cilium
-spec:
-  type: LoadBalancer
-  loadBalancerIP: 10.0.0.129
-  ports:
-  - port: 80
-    targetPort: 80
-    name: http
-  selector:
-    app: memos
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: memos
-  namespace: memos
+  name: memo
+  namespace: memo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: memos
+      app: memo
   template:
     metadata:
       labels:
-        app: memos
+        app: memo
     spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
       volumes:
-        - name: memos-vol
+        - name: memo-vol
           persistentVolumeClaim:
-            claimName: memos-truenas-pvc
+            claimName: memo
       containers:
-      - name: memos
-        image: neosmemo/memos:0.22.5
-        ports:
-          - containerPort: 80
+      - name: memo
+        image: neosmemo/memos:0.25.3
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 15m
+            memory: 105M
+          limits:
+            cpu: 75m
+            memory: 210M
         volumeMounts:
           - mountPath: "/var/opt/memos"
-            name: memos-vol
-        env:
-        - name: PUID
-          valueFrom:
-            configMapKeyRef:
-              name: memos-config
-              key: PUID
-        - name: PGID
-          valueFrom:
-            configMapKeyRef:
-              name: memos-config
-              key: PGID
-        - name: MEMOS_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: memos-config
-              key: MEMOS_PORT
+            name: memo-vol
+        ports:
+          - containerPort: 5230
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memo
+  namespace: memo
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 5230
+    name: http
+  selector:
+    app: memo
 ---
