@@ -2,25 +2,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: emby
-  namespace: emby
-  annotations: 
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  namespace: media
 spec:
-  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: emby
+      port:
+        number: 80
+  ingressClassName: tailscale
   tls:
-  - hosts:
-    - media.sushiraccoon.com
-    secretName: emby-tls
-  rules:
-  - host: media.sushiraccoon.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: emby
-            port:
-              number: 80
+    - hosts:
+        - emby

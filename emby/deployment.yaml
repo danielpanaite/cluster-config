@@ -2,42 +2,18 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: emby-config
-  namespace: emby
-data:
-  pguid: "3000"
-  puid: "3000"
-  tz: "Europe/Rome"
----
-apiVersion: v1
-kind: Service
-metadata:
   name: emby
-  namespace: emby
-  labels:
-    loadbalancer: cilium
-spec:
-  selector:
-    app: emby
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8096
-      name: http
-    - protocol: TCP
-      port: 443
-      targetPort: 8920
-      name: https
-  type: LoadBalancer
-  loadBalancerIP: 10.0.0.110
+  namespace: media
+data:
+  PUID: "3001"
+  PGID: "3001"
+  TZ: Asia/Tokyo
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: emby
-  namespace: emby
-  labels:
-    app: emby
+  namespace: media
 spec:
   replicas: 1
   selector:
@@ -48,44 +24,52 @@ spec:
       labels:
         app: emby
     spec:
+      securityContext:
+        fsGroup: 3001
       volumes:
         - name: emby-vol
           persistentVolumeClaim:
-            claimName: emby-truenas-pvc
-        - name: embymedia-vol
-          persistentVolumeClaim:
-            claimName: embymedia-truenas-pvc
+            claimName: emby
       containers:
       - name: emby
-        image: lscr.io/linuxserver/emby
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "2Gi"
-            cpu: "1500m"
-        ports:
-        - containerPort: 8096
-        - containerPort: 8920
+        image: lscr.io/linuxserver/emby:4.9.3
         volumeMounts:
-          - mountPath: "/config"
-            name: emby-vol
-          - mountPath: "/data"
-            name: embymedia-vol
-        env:
-        - name: GUID
-          valueFrom:
-            configMapKeyRef:
-              name: emby-config
-              key: pguid
-        - name: PUID
-          valueFrom:
-            configMapKeyRef:
-              name: emby-config
-              key: puid
-        - name: TZ
-          valueFrom:
-            configMapKeyRef:
-              name: emby-config
-              key: tz
+          - name: emby-vol
+            mountPath: /config
+            subPath: config
+          - name: emby-vol
+            mountPath: /data/movies
+            subPath: data/movies
+          - name: emby-vol
+            mountPath: /data/tvshows
+            subPath: data/tvshows
+          - name: emby-vol
+            mountPath: /data/anime
+            subPath: data/anime
+          - name: emby-vol
+            mountPath: /data/animemovies
+            subPath: data/animemovies
+          - name: emby-vol
+            mountPath: /data/music
+            subPath: data/music
+        ports:
+          - containerPort: 8096
+          - containerPort: 8920
+        envFrom:
+          - configMapRef:
+              name: emby
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emby
+  namespace: media
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8096
+    name: http
+  selector:
+    app: emby
+---
