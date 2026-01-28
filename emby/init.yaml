@@ -2,36 +2,18 @@
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
   name: emby
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: emby-truenas-pvc
-  namespace: emby
-  labels:
-    app: emby
+  namespace: media
 spec:
-  storageClassName: nfs-csi
   accessModes:
-  - ReadWriteMany
-  resources:
-    requests:
-      storage: 10Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: embymedia-truenas-pvc
-  namespace: emby
-  labels:
-    app: emby
-spec:
-  storageClassName: nfs-csi
-  volumeName: pvc-51f7c0cb-8ad7-44c3-a065-b3d283c2da99
-  accessModes:
-  - ReadWriteMany
+    - ReadWriteMany
   resources:
     requests:
       storage: 500Gi
+  storageClassName: nfs-csi-ephemeral
 ---
