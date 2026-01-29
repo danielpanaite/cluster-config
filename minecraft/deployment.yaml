@@ -2,50 +2,31 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: minecraft-config
-  namespace: minecraft
+  name: minecraft
+  namespace: games
 data:
+  TZ: "Asia/Tokyo"
+  UID: "3001"
+  GID: "3001"
   EULA: "TRUE"
   TYPE: "PAPER"
-  PAPERBUILD: "178"
+  PAPERBUILD: "99"
   INIT_MEMORY: "1G"
-  MAX_MEMORY: "4G"
-  VERSION: "1.21.4"
+  MAX_MEMORY: "2G"
+  VERSION: "1.21.11"
+  ENABLE_WHITELIST: "true"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: minecraft
-  namespace: minecraft
-  labels:
-    loadbalancer: cilium
+  namespace: games
 spec:
-  type: LoadBalancer
-  loadBalancerIP: 10.0.0.111
+  type: ClusterIP
   ports:
-  - port: 80
-    targetPort: 8282
-    name: http
   - port: 25565
     targetPort: 25565
     name: java
-  selector:
-    app: minecraft
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: minecraft-plan
-  namespace: minecraft
-  labels:
-    loadbalancer: cilium
-spec:
-  type: LoadBalancer
-  loadBalancerIP: 10.0.0.126
-  ports:
-  - port: 80
-    targetPort: 8804
-    name: http
   selector:
     app: minecraft
 ---
@@ -53,7 +34,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: minecraft
-  namespace: minecraft
+  namespace: games
 spec:
   replicas: 1
   selector:
@@ -64,44 +45,26 @@ spec:
       labels:
         app: minecraft
     spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
       volumes:
         - name: minecraft-vol
           persistentVolumeClaim:
-            claimName: minecraft-truenas-pvc
+            claimName: minecraft
       containers:
       - name: minecraft
-        image: itzg/minecraft-server
-        ports:
-          - containerPort: 8282
-          - containerPort: 8804
-          - containerPort: 25565
+        image: itzg/minecraft-server:2026.1.3
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
         volumeMounts:
           - mountPath: "/data"
             name: minecraft-vol
-        env:
-        - name: EULA
-          valueFrom:
-            configMapKeyRef:
-              name: minecraft-config
-              key: EULA
-        - name: VERSION
-          valueFrom:
-            configMapKeyRef:
-              name: minecraft-config
-              key: VERSION
-        - name: TYPE
-          valueFrom:
-            configMapKeyRef:
-              name: minecraft-config
-              key: TYPE
-        - name: INIT_MEMORY
-          valueFrom:
-            configMapKeyRef:
-              name: minecraft-config
-              key: INIT_MEMORY
-        - name: MAX_MEMORY
-          valueFrom:
-            configMapKeyRef:
-              name: minecraft-config
-              key: MAX_MEMORY
+        ports:
+          - containerPort: 25565
+        envFrom:
+          - configMapRef:
+              name: minecraft
 ---
