@@ -31,6 +31,7 @@ spec:
         runAsUser: 3001
         runAsGroup: 3001
         fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
       volumes:
         - name: immich-vol
           persistentVolumeClaim:
@@ -41,7 +42,7 @@ spec:
             type: File
       containers:
       - name: immich
-        image: ghcr.io/immich-app/immich-server:v2.4.1
+        image: ghcr.io/immich-app/immich-server:v2.5.3
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
