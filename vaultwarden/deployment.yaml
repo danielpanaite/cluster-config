@@ -26,6 +26,7 @@ spec:
         runAsUser: 3001
         runAsGroup: 3001
         fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
       volumes:
         - name: vaultwarden-vol
           persistentVolumeClaim:
