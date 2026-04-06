@@ -24,6 +24,13 @@ spec:
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 15m
+            memory: 105M
+          limits:
+            cpu: 500m
+            memory: 300M
         startupProbe:
           exec:
             command:
