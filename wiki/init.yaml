@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wiki
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wiki
+  namespace: wiki
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: nfs-csi-critical
+---

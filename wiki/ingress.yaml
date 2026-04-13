@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wiki
+  namespace: wiki
+spec:
+  defaultBackend:
+    service:
+      name: wiki
+      port:
+        number: 80
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - wiki
