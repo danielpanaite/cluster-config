@@ -42,7 +42,7 @@ spec:
             type: File
       containers:
       - name: immich
-        image: ghcr.io/immich-app/immich-server:v2.6.3
+        image: ghcr.io/immich-app/immich-server:v2.7.5
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false

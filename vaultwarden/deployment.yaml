@@ -33,7 +33,7 @@ spec:
             claimName: vaultwarden
       containers:
       - name: vaultwarden
-        image: vaultwarden/server:1.35.3
+        image: vaultwarden/server:1.35.7
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
