@@ -15,7 +15,7 @@ metrics-server:
 
 image:
   repository: us-docker.pkg.dev/fairwinds-ops/oss/goldilocks
-  tag: v4.14.8
+  tag: v4.15.0
   pullPolicy: Always
 
 # imagePullSecrets -- A list of image pull secret names to use
