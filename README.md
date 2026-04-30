@@ -1,4 +1,4 @@
-# K3s cluster configuration for v1.34 on Ubuntu LTS 24.04
+# K3s cluster configuration for v1.35 on Ubuntu LTS 24.04
 
 ## Preparation
 
@@ -15,7 +15,7 @@ sudo vim /etc/motd
 
 #### Install k3s with flags
 ```bash
-curl -sfL https://get.k3s.io | sh -s - --disable=traefik --disable=servicelb --write-kubeconfig-mode=644
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.35.4+k3s1 sh -s - --disable=traefik --disable=servicelb --write-kubeconfig-mode=644
 ```
 
 #### Install k9s and set theme
