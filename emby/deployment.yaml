@@ -39,7 +39,7 @@ spec:
             memory: 500M
           limits:
             cpu: 2000m
-            memory: 800M
+            memory: 2000M
         volumeMounts:
           - name: emby-vol
             mountPath: /config
