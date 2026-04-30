@@ -18,6 +18,13 @@ sudo vim /etc/motd
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.35.4+k3s1 sh -s - --disable=traefik --disable=servicelb --write-kubeconfig-mode=644
 ```
 
+#### Install metallb for LoadBalancer services
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.3/config/manifests/metallb-native.yaml
+kubectl apply -f metallb/ipaddresspool.yaml
+kubectl apply -f metallb/l2advertisement.yaml
+```
+
 #### Install k9s and set theme
 ```bash
 LATEST=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | jq -r .tag_name)
