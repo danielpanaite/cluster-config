@@ -47,7 +47,8 @@ metadata:
   name: memo
   namespace: memo
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.130
   ports:
   - port: 80
     targetPort: 5230

@@ -56,7 +56,8 @@ metadata:
   name: wiki
   namespace: wiki
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.110
   ports:
   - port: 80
     targetPort: 8080

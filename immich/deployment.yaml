@@ -77,7 +77,8 @@ metadata:
   name: immich
   namespace: immich
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.120
   ports:
   - port: 80
     targetPort: 2283
