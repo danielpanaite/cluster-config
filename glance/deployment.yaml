@@ -114,6 +114,9 @@ data:
                   - FairwindsOps/goldilocks
                   - tailscale/tailscale
                   - kubernetes/kubernetes
+                  - go-gitea/gitea
+                  - leomoon-studios/wiki-go
+                  - mealie-recipes/mealie
           
       - name: Videos
         columns:
