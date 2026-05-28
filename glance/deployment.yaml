@@ -5,15 +5,23 @@ metadata:
   name: glance
   namespace: dashboard
 data:
+  my-custom.css: |
+    main a:visited {
+      color: #C6A0F6 !important;
+    }
   glance.yml: |
+    server:
+      assets-path: /app/assets
     theme:
       background-color: 232 23 18
-      contrast-multiplier: 1.2
+      contrast-multiplier: 1.3
       primary-color: 220 83 75
       positive-color: 105 48 72
       negative-color: 351 74 73
-
       disable-picker: false
+
+      custom-css-file: /assets/my-custom.css
+
       presets:
         catppuccin-latte:
           light: true
@@ -28,25 +36,359 @@ data:
         columns:
           - size: small
             widgets:
-              - type: weather
-                units: metric
-                hour-format: 24h
-                location: Tokyo, Japan
+              - type: custom-api
+                title: Trending News (Bluesky)
+                url: >-
+                  https://public.api.bsky.app/xrpc/app.bsky.feed.getFeed?feed=at://did:plc:kkf4naxqmweop7dv4l2iqqf5/app.bsky.feed.generator/news-2-0
+                template: |
+                  <ul class="list list-gap-10 collapsible-container" data-collapse-after="5">
+                    {{ range .JSON.Array "feed" }}
+                      {{ if .String "post.embed.external.title" }}
+                        <li>
+                          <a class="size-title-dynamic color-primary-if-not-visited" href="{{ .String "post.embed.external.uri" }}">{{ .String "post.embed.external.title" }}</a>
+                          <ul class="list-horizontal-text">
+                            <li>{{ .String "post.author.displayName" }} <a class="visited-indicator" href="https://bsky.app/profile/{{ .String "post.author.did" }}"> @{{ .String "post.author.handle" }}</a></li>
+                            <li>{{ .String "post.record.text" }}</li>
+                          </ul>
+                        </li>
+                      {{ end }}
+                    {{ end }}
+                  </ul>
+              
+              - type: custom-api
+                title: Trending Repositories
+                cache: 24h 
+                url: 'https://api.ossinsight.io/v1/trends/repos/?period=past_week&language=All'
+                template: |
+                  <ul class="list list-gap-10 collapsible-container" data-collapse-after="3">
+                    {{ range .JSON.Array "data.rows"}}
+                      <li>
+                        <a class="color-primary-if-not-visited" href="https://github.com/{{ .String "repo_name" }}">{{ .String "repo_name" }}</a> 
+                        <ul class="list-horizontal-text">
+                            <li class="color-highlight"> {{.String "primary_language"}} </li>
 
-              - type: markets
-                markets:
-                  - symbol: EURJPY=X
-                    name: EUR-JPY
+                            <li style="display: flex; align-items: center;gap: 4px;">
+                              {{ .Int "stars" }}
+                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+                              </svg>
+                            </li>
 
-              - type: to-do
+                            <li style="display: flex; align-items: center;gap: 4px;">
+                              {{ .Int "forks" }}
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <circle cx="12" cy="18" r="2" />
+                                <circle cx="7" cy="6" r="2" />
+                                <circle cx="17" cy="6" r="2" />
+                                <path d="M7 8v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2v-2" />
+                                <path d="M12 12l0 4" />
+                              </svg>
+                            </li>
+
+                            <li style="display: flex; align-items: center;gap: 4px;">
+                              {{ .Int "pull_requests" }}
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <circle cx="6" cy="6" r="3"></circle>
+                                <circle cx="18" cy="18" r="3"></circle>
+                                <path d="M13 6h3a2 2 0 0 1 2 2v7"></path>
+                                <line x1="6" y1="9" x2="6" y2="21"></line>
+                              </svg>
+                            </li>
+
+                        </ul>
+                        <ul class="list collapsible-container">
+                          <li style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" class="color-subdue">
+                            Contributors: {{ .String "contributor_logins"}}
+                          </li>
+                          <li>
+                            {{ .String "description" }}
+                          </li>
+                        </ul>
+                      </li>
+                    {{ end }}
+                  </ul>
+
+          - size: full
+            widgets:
+              - type: custom-api
+                title: Container Updates
+                cache: 1m
+                url: http://cupdate.dashboard.svc.cluster.local/api/v1/images?tag=outdated
+                method: GET
+                template: |
+
+                  <style>
+                    .vertical-separator-cup {
+                      width: 3px;
+                      height: 3.5rem;
+                      margin: 0 1rem;
+                      border-radius: 2px;
+                      align-self: center;
+                      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.05) 80%, transparent);
+                    }
+                    .container-list-cup li {
+                      text-align: center;
+                      margin-top: 1.5rem;
+                    }
+                    .container-list-cup {
+                      padding: 0;
+                      margin: 0;
+                      line-height: 1.2;
+                    }
+                    .container-list-cup a {
+                      text-decoration: none;
+                      display: block;
+                      padding: 1px 0;
+                      font-size: 1.1rem;
+                      margin-top: 1rem;
+                    }
+                    .status-values-cup {
+                      font-size: 1.8rem;
+                    }
+                  </style>
+
+                  {{ $totalImages := .JSON.Int "summary.images" }}
+                  {{ $outdated := .JSON.Int "summary.outdated" }}
+                  {{ $updated := sub $totalImages $outdated }}
+
+                  <div class="flex flex-column gap-4">
+                    <div class="flex items-center text-center">
+                      <div class="flex-1">
+                        <div class="status-values-cup size-h3">{{ $totalImages }}</div>
+                        <div class="size-h6">TOTAL</div>
+                      </div>
+                      {{ if gt $outdated 0 }}
+                      <div class="vertical-separator-cup"></div>
+                      <div class="flex-1">
+                          <div class="status-values-cup size-h3 color-positive">{{ $outdated }}</div>
+                          <div class="size-h6 color-positive">AVAILABLE</div>
+                      </div>
+                      {{ end }}
+                      <div class="vertical-separator-cup"></div>
+                      <div class="flex-1">
+                        <div class="status-values-cup size-h3">{{ $updated }}</div>
+                        <div class="size-h6">UP TO DATE</div>
+                      </div>
+                    </div>
+
+                    <div class="container-list-cup">
+                      <ul class="list list-gap-10-cup collapsible-container" data-collapse-after="3">
+                        {{ range .JSON.Array "images" }}
+                              <li>
+                                {{ $reference := .String "reference" }}
+                                {{ $latestReference := .String "latestReference" }}
+
+                                {{ $repository := findMatch "^[^:]+" $reference }}
+
+                                {{ $currentVersion := findMatch ":([^@]+)" $reference | trimPrefix ":" }}
+                                {{ $newVersion := findMatch ":([^@]+)" $latestReference | trimPrefix ":" }}
+
+                                <a class="block text-truncate" target="_blank" rel="noreferrer" style="font-size: 1.47rem;">{{ $repository }}</a>
+
+                                {{ if and $currentVersion $newVersion }}
+                                  <div style="margin: 0.2rem 0;">
+                                    <span>{{ $currentVersion }}</span>
+                                    <span> → </span>
+                                    <span class="size-h4 color-positive">{{ $newVersion }}</span>
+                                  </div>
+                                {{ end }}
+                              </li>
+                        {{ end }}
+
+                        {{ if eq $outdated 0 }}
+                          <div class="flex items-center justify-center" style="margin-top: 1.5rem;">
+                            <span class="color-positive size-h4">All images are up to date!</span>
+                          </div>
+                        {{ end }}
+                      </ul>
+                    </div>
+                  </div>
 
               - type: server-stats
                 servers:
                   - type: local
                     name: Services
 
+              - type: custom-api
+                title: TrueNAS Pools
+                cache: 1h
+                template: |
+                  {{
+                    $dataset := newRequest "${TRUENAS_HOST}/api/v2.0/pool/dataset"
+                      | withHeader "Authorization" "Bearer ${TRUENAS_API_KEY}"
+                      | getResponse
+                  }}
+                  {{
+                    $pool := newRequest "${TRUENAS_HOST}/api/v2.0/pool"
+                      | withHeader "Authorization" "Bearer ${TRUENAS_API_KEY}"
+                      | getResponse
+                  }}
+
+                  {{ range $dataset.JSON.Array "" }}
+                    {{ if not (findMatch "/" (.String "name")) }}
+
+                      {{ $used := .Float "used.parsed" }}
+                      {{ $available := .Float "available.parsed" }}
+                      {{ $total := add $used $available }}
+
+                      {{ $totalTb := div (div (div (div $total 1024) 1024) 1024) 1024 | printf "%.1f" }}
+
+                      {{ $percent := mul (div $used $total) 100 | printf "%.1f" }}
+
+                      {{ $searchString := printf "..#.#(name==\"%s\").healthy|0" (.String "name") }}
+                      {{ $healthy := $pool.JSON.Bool $searchString }}
+
+                      <div style="margin-bottom: 1rem;">
+                        <div class="flex justify-between items-end size-h5" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div style="text-transform: uppercase;">
+                        {{ if $healthy }}
+                            <span style="display: inline-block; background-color: var(--color-positive); width: 8px; height: 8px; border-radius: 50%;"></span>
+                          {{ else }}
+                            <span style="display: inline-block; background-color: var(--color-negative); width: 8px; height: 8px; border-radius: 50%;"></span>
+                          {{ end }}
+                          <span>{{ .String "name" }}</span>
+                          </div>
+                          <div class="color-highlight text-very-compact">
+                            <span>{{ .String "used.value" }} / {{ $totalTb }}T - </span><span class="color-base">{{ $percent }}%</span>
+                          </div>
+                        </div>
+
+                        <div class="progress-bar" style="height: 24px; border: 1.5px solid #383e56; border-radius: 8px; padding: 3px; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; background: transparent;">
+                      
+                          <div style="
+                            height: 100%;
+                            width: {{ $percent }}%;
+                            background-color: #686FA0;
+                            border-radius: 4px;
+                            transition: width 0.3s ease;
+                            margin-right: auto;
+                          "></div>
+
+                        </div>
+                      </div>
+
+                    {{ end }}
+                  {{ end }}
+
+              - type: custom-api
+                title: Time
+                body-type: string
+                skip-json-validation: true
+                cache: 1h
+                template: |
+                  {{ $localTime := now }}
+                  
+                  {{ $secondsToday := add (mul $localTime.Hour 3600) (mul $localTime.Minute 60) | add $localTime.Second }}
+                  {{ $dayOfYear := $localTime.YearDay }}
+                  {{ $secondsElapsed := add (mul (sub $dayOfYear 1) 86400) $secondsToday }}
+
+                  {{ $totalSecondsInYear := mul 365 86400 }}
+                  {{ $yearProgress := div (mul $secondsElapsed 100.0) $totalSecondsInYear }}
+
+                  {{ $gradient := "#686FA0" }}
+
+                  <div>
+                    <div class="flex justify-between items-end size-h5" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                      <div>YEAR ELAPSED</div>
+                      <div class="color-highlight text-very-compact">
+                        {{ printf "%.0f" $yearProgress }} <span class="color-base">%</span>
+                      </div>
+                    </div>
+
+                    <div class="progress-bar" style="height: 24px; border: 1.5px solid #383e56; border-radius: 8px; padding: 3px; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; background: transparent;">
+                      
+                      <div style="
+                        height: 100%;
+                        width: {{ $yearProgress }}%;
+                        background-color: {{ $gradient }};
+                        border-radius: 4px;
+                        transition: width 0.3s ease;
+                        margin-right: auto;
+                      "></div>
+
+                    </div>
+                  </div>
+
+              - type: to-do
+
+      - name: Media
+        columns:
           - size: full
             widgets:
+              - type: custom-api
+                title: Steam Specials
+                cache: 12h
+                url: https://store.steampowered.com/api/featuredcategories?cc=jp
+                template: |
+                  <ul class="list list-gap-10 collapsible-container" data-collapse-after="5">
+                  {{ range .JSON.Array "specials.items" }}
+                    {{ $header := .String "header_image" }}
+                    {{ $urlPrefix := "https://store.steampowered.com/sub/" }}
+                    {{ if findMatch "/steam/apps/" $header }}
+                      {{ $urlPrefix = "https://store.steampowered.com/app/" }}
+                    {{ end }}
+                    <li>
+                      <a class="size-h4 color-highlight block text-truncate" href="{{ $urlPrefix }}{{ .Int "id" }}/">{{ .String "name" }}</a>
+                      <ul class="list-horizontal-text">
+                        <li>{{ .Int "final_price" | toFloat | mul 0.01 | printf "$%.2f" }}</li>
+                        {{ $discount := .Int "discount_percent" }}
+                        <li{{ if ge $discount 40 }} class="color-positive"{{ end }}>{{ $discount }}% off</li>
+                      </ul>
+                    </li>
+                  {{ end }}
+                  </ul>
+              - type: custom-api
+                title: Epic Games
+                cache: 1h
+                url: https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=en&country=US&allowCountries=US
+                template: |
+                  <div>
+                    {{ if eq .Response.StatusCode 200 }}
+                      <div class="horizontal-cards-2">
+                        {{ range .JSON.Array "data.Catalog.searchStore.elements" }}
+                          {{ $price := .String "price.totalPrice.discountPrice" }}
+                          {{ $hasPromo := gt (len (.Array "promotions.promotionalOffers")) 0 }}
+                          {{ if and $hasPromo (eq $price "0") }}
+                            {{ $gamePage := .String "productSlug" }}
+                            {{ if gt (len (.Array "offerMappings")) 0 }}
+                              {{ $gamePage = .String "offerMappings.0.pageSlug" }}
+                            {{end }}
+                            <a href="https://store.epicgames.com/en-US/p/{{ $gamePage }}" target="_blank" class="card">
+                              {{ $title := .String "title" }}
+                              {{ range .Array "keyImages" }}
+                                {{ if eq (.String "type") "OfferImageWide" }}
+                                  <img src="{{ .String "url" }}" alt="{{ $title }}" style="width: 100%; max-width: 300px; height: 150px; object-fit: cover; border-radius: var(--border-radius);">
+                                {{ end }}
+                              {{ end }}
+                              <div class="card-content">
+                                <span class="size-base color-primary">{{ $title }}</span><br>
+                                <span class="size-h5 color-subdue">
+                                  {{ if $hasPromo }}
+                                    {{ $promotions := .Array "promotions.promotionalOffers" }}
+                                    {{ if gt (len $promotions) 0 }}
+                                      {{ $firstPromo := index $promotions 0 }}
+                                      {{ $offers := $firstPromo.Array "promotionalOffers" }}
+                                      {{ if gt (len $offers) 0 }}
+                                        {{ $firstOffer := index $offers 0 }}
+                                        Free until {{ slice ($firstOffer.String "endDate") 0 10 }}
+                                      {{ else }}
+                                        Free this week!
+                                      {{ end }}
+                                    {{ else }}
+                                      Free this week!
+                                    {{ end }}
+                                  {{ end }}
+                                </span>
+                              </div>
+                            </a>
+                          {{ end }}
+                        {{ end }}
+                      </div>
+                    {{ else }}
+                      <p class="color-negative">Error fetching Epic Games data.</p>
+                    {{ end }}
+                  </div>
               - type: custom-api
                 title: Seasonal Anime
                 frameless: true
@@ -101,32 +443,6 @@ data:
                       {{ end }}
                     </div>
                   </div>
-              
-              - type: releases
-                cache: 1d
-                title: Releases
-                collapse-after: 50
-                repositories:
-                  - immich-app/immich
-                  - dani-garcia/vaultwarden
-                  - usememos/memos
-                  - kubernetes-csi/csi-driver-nfs
-                  - FairwindsOps/goldilocks
-                  - tailscale/tailscale
-                  - kubernetes/kubernetes
-                  - go-gitea/gitea
-                  - leomoon-studios/wiki-go
-                  - mealie-recipes/mealie
-          
-      - name: Videos
-        columns:
-          - size: full
-            widgets:
-              - type: videos
-                channels:
-                  - UCXuqSBlHAE6Xw-yeJA0Tunw # Linus Tech Tips
-                  - UCHnyfMqiRRG1u-2MsSQLbXA # Veritasium
-                  - UCauYsudjxKQsgW-i7odNujw # AlienFood
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -148,9 +464,6 @@ spec:
         runAsGroup: 3001
         fsGroup: 3001
       volumes:
-        - name: glance-vol
-          persistentVolumeClaim:
-            claimName: glance
         - name: glance-config
           configMap:
             name: glance
@@ -169,14 +482,18 @@ spec:
             mountPath: /app/config/glance.yml
             subPath: glance.yml
             readOnly: true
-          - name: glance-vol
-            mountPath: /app/assets
-            subPath: assets
+          - name: glance-config
+            mountPath: /app/assets/my-custom.css
+            subPath: my-custom.css
+            readOnly: true
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
         ports:
           - containerPort: 8080
+        envFrom:
+          - secretRef:
+              name: glance
 ---
 apiVersion: v1
 kind: Service
