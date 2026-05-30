@@ -23,6 +23,7 @@ spec:
     metadata:
       labels:
         app: postgres
+        config.cupdate/ignore: "true"
     spec:
       volumes:
         - name: postgres-vol

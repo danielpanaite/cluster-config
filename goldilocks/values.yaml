@@ -6,6 +6,12 @@ vpa:
   enabled: true
   updater:
     enabled: false
+  recommender:
+    image:
+      tag: 1.6.0
+  admissionController:
+    image:
+      tag: 1.6.0
 
 metrics-server:
   # metrics-server.enabled -- If true, the metrics-server will be installed as a sub-chart

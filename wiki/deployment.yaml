@@ -36,7 +36,7 @@ spec:
             type: File
       containers:
       - name: wiki
-        image: leomoonstudios/wiki-go:1.8.7
+        image: leomoonstudios/wiki-go:1.8.10
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false

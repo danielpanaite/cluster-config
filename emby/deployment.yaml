@@ -23,16 +23,18 @@ spec:
     metadata:
       labels:
         app: emby
+        config.cupdate/stay-on-current-major: "true"
     spec:
       securityContext:
         fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
       volumes:
         - name: emby-vol
           persistentVolumeClaim:
             claimName: emby
       containers:
       - name: emby
-        image: lscr.io/linuxserver/emby:4.9.3
+        image: lscr.io/linuxserver/emby:4.9.5
         resources:
           requests:
             cpu: 15m

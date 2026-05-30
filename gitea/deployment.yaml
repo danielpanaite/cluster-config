@@ -56,7 +56,7 @@ spec:
             claimName: gitea
       containers:
       - name: gitea
-        image: gitea/gitea:1.26.1-rootless
+        image: gitea/gitea:1.26.2-rootless
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
