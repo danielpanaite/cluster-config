@@ -1,0 +1,97 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: paperless
+  namespace: docs
+data:
+  PAPERLESS_REDIS: "redis://valkey.docs.svc.cluster.local:6379"
+  PAPERLESS_CONSUMER_POLLING: "60"
+  USERMAP_UID: "3001"
+  USERMAP_GID: "3001"
+  PAPERLESS_PORT: "8000"
+  PAPERLESS_CSRF_ALLOWED_HOSTS: "docs.hyrax-ghoul.ts.net,10.0.255.113"
+  PAPERLESS_URL: "https://docs.hyrax-ghoul.ts.net"
+  PAPERLESS_TRAIN_TASK_CRON: "disable"
+  PAPERLESS_OCR_USER_ARGS: '{"continue_on_soft_render_error": true}'
+  PAPERLESS_OCR_PAGES: "5"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless
+  namespace: docs
+  labels:
+    app: paperless
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paperless
+  template:
+    metadata:
+      labels:
+        app: paperless
+    spec:
+      securityContext:
+        fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
+      volumes:
+        - name: paperless-export
+          persistentVolumeClaim:
+            claimName: paperless-export
+        - name: paperless-consume
+          persistentVolumeClaim:
+            claimName: paperless-consume
+        - name: paperless-data
+          persistentVolumeClaim:
+            claimName: paperless-data
+        - name: paperless-media
+          persistentVolumeClaim:
+            claimName: paperless-media
+      containers:
+      - name: paperless
+        image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
+        securityContext:
+          runAsNonRoot: false
+          allowPrivilegeEscalation: true
+        resources:
+          requests:
+            memory: "125Mi"
+            cpu: "250m"
+          limits:
+            memory: "2000Mi"
+            cpu: "2000m"
+        envFrom:
+          - configMapRef:
+              name: paperless
+
+        ports:
+        - containerPort: 8000
+
+        volumeMounts:
+          - mountPath: /usr/src/paperless/data
+            name: paperless-data
+          - mountPath: /usr/src/paperless/media
+            name: paperless-media
+          - mountPath: /usr/src/paperless/export
+            name: paperless-export
+          - mountPath: /usr/src/paperless/consume
+            name: paperless-consume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paperless
+  namespace: docs
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.113
+  selector:
+    app: paperless
+  ports:
+    - protocol: TCP
+      port: 80
+      name: http
+      targetPort: 8000
+---
