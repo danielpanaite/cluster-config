@@ -5,7 +5,7 @@ metadata:
   name: cup-image-fetch
   namespace: cup
 spec:
-  schedule: "*/30 * * * *"
+  schedule: "0 6,12,18 * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
@@ -55,13 +55,8 @@ spec:
 
                   TARGET_FILE="/config/cup.json"
 
-                  if [ ! -f "$TARGET_FILE" ] || ! echo "$NEW_JSON" | cmp -s "$TARGET_FILE" -; then
-                      echo "Changes detected or configuration missing. Updating $TARGET_FILE and restarting cup..."
-                      echo "$NEW_JSON" > "$TARGET_FILE"
-                      kubectl rollout restart deployment/cup -n cup
-                  else
-                      echo "No changes detected. Skipping cup restart."
-                  fi
+                  echo "$NEW_JSON" > "$TARGET_FILE"
+                  kubectl rollout restart deployment/cup -n cup
 
                   cat "$TARGET_FILE"
               volumeMounts:
