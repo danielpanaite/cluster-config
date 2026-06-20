@@ -25,7 +25,7 @@ spec:
               image: alpine/k8s:1.36.1
               env:
                 - name: EXCLUDE_IMAGES
-                  value: "lscr.io/linuxserver/emby lscr.io/linuxserver/qbittorrent postgres alpine/k8s"
+                  value: "lscr.io/linuxserver/emby postgres alpine/k8s alpine"
               imagePullPolicy: IfNotPresent
               command: ["/bin/sh", "-c"]
               args:
