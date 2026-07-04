@@ -37,7 +37,7 @@ spec:
             claimName: mealie
       containers:
       - name: mealie
-        image: ghcr.io/mealie-recipes/mealie:v3.19.2
+        image: ghcr.io/mealie-recipes/mealie:v3.20.1
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
