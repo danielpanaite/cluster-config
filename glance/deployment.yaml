@@ -114,7 +114,7 @@ data:
               - type: custom-api
                 title: Container Updates
                 cache: 1m
-                url: http://cupdate.dashboard.svc.cluster.local/api/v1/images?tag=outdated
+                url: http://cup.cup.svc.cluster.local/api/v3/json
                 method: GET
                 template: |
 
@@ -148,9 +148,9 @@ data:
                     }
                   </style>
 
-                  {{ $totalImages := .JSON.Int "summary.images" }}
-                  {{ $outdated := .JSON.Int "summary.outdated" }}
-                  {{ $updated := sub $totalImages $outdated }}
+                  {{ $totalImages := .JSON.Int "metrics.monitored_images" }}
+                  {{ $outdated := .JSON.Int "metrics.updates_available" }}
+                  {{ $updated := .JSON.Int "metrics.up_to_date" }}
 
                   <div class="flex flex-column gap-4">
                     <div class="flex items-center text-center">
@@ -175,25 +175,24 @@ data:
                     <div class="container-list-cup">
                       <ul class="list list-gap-10-cup collapsible-container" data-collapse-after="3">
                         {{ range .JSON.Array "images" }}
-                              <li>
-                                {{ $reference := .String "reference" }}
-                                {{ $latestReference := .String "latestReference" }}
+                          {{ if .Bool "result.has_update" }}
+                            <li>
+                              {{ $repository := .String "parts.repository" }}
 
-                                {{ $repository := findMatch "^[^:]+" $reference }}
+                              {{ $currentVersion := .String "result.info.current_version" }}
+                              {{ $newVersion := .String "result.info.new_version" }}
 
-                                {{ $currentVersion := findMatch ":([^@]+)" $reference | trimPrefix ":" }}
-                                {{ $newVersion := findMatch ":([^@]+)" $latestReference | trimPrefix ":" }}
+                              <a class="block text-truncate" target="_blank" rel="noreferrer" style="font-size: 1.47rem;">{{ $repository }}</a>
 
-                                <a class="block text-truncate" target="_blank" rel="noreferrer" style="font-size: 1.47rem;">{{ $repository }}</a>
-
-                                {{ if and $currentVersion $newVersion }}
-                                  <div style="margin: 0.2rem 0;">
-                                    <span>{{ $currentVersion }}</span>
-                                    <span> → </span>
-                                    <span class="size-h4 color-positive">{{ $newVersion }}</span>
-                                  </div>
-                                {{ end }}
-                              </li>
+                              {{ if and $currentVersion $newVersion }}
+                                <div style="margin: 0.2rem 0;">
+                                  <span>{{ $currentVersion }}</span>
+                                  <span> → </span>
+                                  <span class="size-h4 color-positive">{{ $newVersion }}</span>
+                                </div>
+                              {{ end }}
+                            </li>
+                          {{ end }}
                         {{ end }}
 
                         {{ if eq $outdated 0 }}
