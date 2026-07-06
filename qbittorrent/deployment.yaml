@@ -1,0 +1,131 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gluetun
+  namespace: torrent
+data:
+  VPN_SERVICE_PROVIDER: "protonvpn"
+  VPN_TYPE: "wireguard"
+  VPN_PORT_FORWARDING: "on"
+  VPN_PORT_FORWARDING_PROVIDER: "protonvpn"
+  STATUS_FILE: "/tmp/gluetun/status.json"
+  QBITTORRENT_USE_INOTIFY: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbittorrent
+  namespace: torrent
+data:
+  PUID: "3001"
+  PGID: "3001"
+  TZ: "Asia/Tokyo"
+  WEBUI_PORT: "8080"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent
+  namespace: torrent
+  labels:
+    app: qbittorrent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qbittorrent
+  template:
+    metadata:
+      labels:
+        app: qbittorrent
+        config.cupdate/stay-on-current-major: "true"
+    spec:
+      volumes:
+        - name: gluetun-shared
+          emptyDir: {}
+        - name: qbittorrent-vol
+          persistentVolumeClaim:
+            claimName: qbittorrent
+
+      initContainers:
+        - name: gluetun
+          image: qmcgaw/gluetun:v3.41.1
+          restartPolicy: Always
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN"]
+          envFrom:
+          - configMapRef:
+              name: gluetun
+          - secretRef:
+              name: gluetun
+          volumeMounts:
+            - name: gluetun-shared
+              mountPath: /tmp/gluetun
+      securityContext:
+        fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: qbittorrent
+          image: lscr.io/linuxserver/qbittorrent:5.2.2
+          securityContext:
+            allowPrivilegeEscalation: false
+          envFrom:
+          - configMapRef: 
+              name: qbittorrent
+          volumeMounts:
+            - name: qbittorrent-vol
+              mountPath: /config
+              subPath: config
+            - name: qbittorrent-vol
+              mountPath: /downloads
+              subPath: downloads
+          ports:
+            - containerPort: 8080
+              name: http-webui
+
+        - name: port-updater
+          image: alpine:3.23.4
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for Gluetun port file..."
+              while [ ! -f /tmp/gluetun/forwarded_port ]; do sleep 2; done
+              
+              OLD_PORT=""
+              while true; do
+                CURRENT_PORT=$(cat /tmp/gluetun/forwarded_port)
+                if [ "$CURRENT_PORT" != "$OLD_PORT" ] && [ ! -z "$CURRENT_PORT" ]; then
+                  echo "New ProtonVPN Port Detected: $CURRENT_PORT. Updating qBittorrent..."
+                  
+                  wget -q -O- --post-data="json={\"listen_port\":${CURRENT_PORT},\"random_port\":false,\"upnp\":false}" \
+                    http://127.0.0.1:8080/api/v2/app/setPreferences
+                  
+                  OLD_PORT=$CURRENT_PORT
+                fi
+                sleep 45
+              done
+          volumeMounts:
+            - name: gluetun-shared
+              mountPath: /tmp/gluetun
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent
+  namespace: torrent
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.112
+  selector:
+    app: qbittorrent
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      name: webui
