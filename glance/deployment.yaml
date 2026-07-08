@@ -114,7 +114,7 @@ data:
               - type: custom-api
                 title: Container Updates
                 cache: 1m
-                url: http://cup.cup.svc.cluster.local/api/v3/json
+                url: http://cup.dashboard.svc.cluster.local/api/v3/json
                 method: GET
                 template: |
 

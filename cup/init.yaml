@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cup
+  name: dashboard
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: cup-cron
-  namespace: cup
+  namespace: dashboard
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -29,7 +29,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: cup-cron
-    namespace: cup
+    namespace: dashboard
 roleRef:
   kind: ClusterRole
   name: cup-cron
@@ -39,7 +39,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: cup
-  namespace: cup
+  namespace: dashboard
 spec:
   accessModes:
     - ReadWriteOnce
