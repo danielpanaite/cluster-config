@@ -11,7 +11,7 @@
       CPU: 2 core / 4 thread @ 3.2 GHz
       RAM: 12GB DDR4
 
-      K8s version v1.35.4+k3s1
+      K8s version v1.36.2+k3s1
       CNI: Flannel
       Container runtime: containerd
 
