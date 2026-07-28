@@ -6,7 +6,7 @@ metadata:
   namespace: docs
 data:
   PAPERLESS_REDIS: "redis://valkey.docs.svc.cluster.local:6379"
-  PAPERLESS_CONSUMER_POLLING: "60"
+  PAPERLESS_CONSUMER_POLLING_INTERVAL: "60"
   USERMAP_UID: "3001"
   USERMAP_GID: "3001"
   PAPERLESS_PORT: "8000"
@@ -51,7 +51,7 @@ spec:
             claimName: paperless-media
       containers:
       - name: paperless
-        image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
+        image: ghcr.io/paperless-ngx/paperless-ngx:3.0.3
         securityContext:
           runAsNonRoot: false
           allowPrivilegeEscalation: true
@@ -64,6 +64,8 @@ spec:
             cpu: "2000m"
         envFrom:
           - configMapRef:
+              name: paperless
+          - secretRef:
               name: paperless
 
         ports:
