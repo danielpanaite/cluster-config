@@ -51,7 +51,7 @@ spec:
             claimName: paperless-media
       containers:
       - name: paperless
-        image: ghcr.io/paperless-ngx/paperless-ngx:3.0.3
+        image: ghcr.io/paperless-ngx/paperless-ngx:3.0.4
         securityContext:
           runAsNonRoot: false
           allowPrivilegeEscalation: true
