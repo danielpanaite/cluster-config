@@ -214,34 +214,24 @@ data:
                 cache: 1h
                 template: |
                   {{
-                    $dataset := newRequest "${TRUENAS_HOST}/api/v2.0/pool/dataset"
-                      | withHeader "Authorization" "Bearer ${TRUENAS_API_KEY}"
-                      | getResponse
-                  }}
-                  {{
-                    $pool := newRequest "${TRUENAS_HOST}/api/v2.0/pool"
-                      | withHeader "Authorization" "Bearer ${TRUENAS_API_KEY}"
+                    $pools := newRequest "${TRUENAS_PROXY_HOST}/pools"
                       | getResponse
                   }}
 
-                  {{ range $dataset.JSON.Array "" }}
-                    {{ if not (findMatch "/" (.String "name")) }}
+                  {{ range $pools.JSON.Array "" }}
+                    {{ $used := .Float "allocated" }}
+                    {{ $total := .Float "size" }}
 
-                      {{ $used := .Float "used.parsed" }}
-                      {{ $available := .Float "available.parsed" }}
-                      {{ $total := add $used $available }}
-
+                    {{ if gt $total 0.0 }}
+                      {{ $usedGiB := div (div (div $used 1024) 1024) 1024 | printf "%.1f" }}
                       {{ $totalTb := div (div (div (div $total 1024) 1024) 1024) 1024 | printf "%.1f" }}
-
                       {{ $percent := mul (div $used $total) 100 | printf "%.1f" }}
-
-                      {{ $searchString := printf "..#.#(name==\"%s\").healthy|0" (.String "name") }}
-                      {{ $healthy := $pool.JSON.Bool $searchString }}
+                      {{ $healthy := .Bool "healthy" }}
 
                       <div style="margin-bottom: 1rem;">
                         <div class="flex justify-between items-end size-h5" style="display: flex; justify-content: space-between; align-items: flex-end;">
                         <div style="text-transform: uppercase;">
-                        {{ if $healthy }}
+                          {{ if $healthy }}
                             <span style="display: inline-block; background-color: var(--color-positive); width: 8px; height: 8px; border-radius: 50%;"></span>
                           {{ else }}
                             <span style="display: inline-block; background-color: var(--color-negative); width: 8px; height: 8px; border-radius: 50%;"></span>
@@ -249,7 +239,7 @@ data:
                           <span>{{ .String "name" }}</span>
                           </div>
                           <div class="color-highlight text-very-compact">
-                            <span>{{ .String "used.value" }} / {{ $totalTb }}T - </span><span class="color-base">{{ $percent }}%</span>
+                            <span>{{ $usedGiB }} GiB / {{ $totalTb }} TiB - </span><span class="color-base">{{ $percent }}%</span>
                           </div>
                         </div>
 
@@ -493,6 +483,13 @@ spec:
         envFrom:
           - secretRef:
               name: glance
+      - name: truenas-proxy
+        image: danielpanaite/truenas-websocket-proxy:0.1.0
+        ports:
+          - containerPort: 8000
+        envFrom:
+          - secretRef:
+              name: glance-truenas-proxy
 ---
 apiVersion: v1
 kind: Service
