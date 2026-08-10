@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rohan
+  namespace: wiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rohan
+  template:
+    metadata:
+      labels:
+        app: rohan
+    spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
+      volumes:
+        - name: rohan-vol
+          persistentVolumeClaim:
+            claimName: rohan
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+      containers:
+      - name: wiki
+        image: leomoonstudios/wiki-go:1.8.12
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        volumeMounts:
+          - name: rohan-vol
+            mountPath: /wiki/data
+            subPath: assets
+          - name: localtime
+            mountPath: /etc/localtime
+            readOnly: true
+        ports:
+          - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rohan
+  namespace: wiki
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.114
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: rohan
+---
