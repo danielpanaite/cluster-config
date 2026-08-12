@@ -2,5 +2,4 @@ creation_rules:
   - path_regex: 'secret\.ya?ml$'
     encrypted_regex: '^(data|stringData)$'
     age: 
-      - age1zntlst203x7ktfzat7fzvee05zm4klugdtfmpgd495me4vjx65wsvlle8k
-      - age1fcayjcsauny5czgwvyauqqqd4aa2kg3v7ghlvx6kjwqnz0luc9mq23famu
+      - age1eps788r7kt7c57svnly95jmq4nk2lvuzdsjnfkdyqxq7kajlv5psr6z62c
