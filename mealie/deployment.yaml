@@ -10,6 +10,11 @@ data:
   TOKEN_TIME: "9000"
   TZ: "Asia/Tokyo"
   BASE_URL: "https://mealie.hyrax-ghoul.ts.net"
+  OIDC_AUTH_ENABLED: "true"
+  OIDC_SIGNUP_ENABLED: "false"
+  OIDC_PROVIDER_NAME: "Awawa ID"
+  OIDC_CONFIGURATION_URL: "https://auth.hyrax-ghoul.ts.net/.well-known/openid-configuration"
+  ALLOW_PASSWORD_LOGIN: "false"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -55,6 +60,8 @@ spec:
           - containerPort: 9000
         envFrom:
           - configMapRef:
+              name: mealie
+          - secretRef:
               name: mealie
 ---
 apiVersion: v1
