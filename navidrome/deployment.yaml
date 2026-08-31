@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: navidrome
+  namespace: media
+data:
+  ND_ARTISTIMAGEFOLDER: "/data/artists"
+  ND_ARTISTARTPRIORITY: "image-folder"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: navidrome
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: navidrome
+  template:
+    metadata:
+      labels:
+        app: navidrome
+    spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
+      volumes:
+        - name: navidrome-vol
+          persistentVolumeClaim:
+            claimName: navidrome
+      containers:
+      - name: navidrome
+        image: deluan/navidrome:0.63.2
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 15m
+            memory: 105M
+          limits:
+            cpu: 250m
+            memory: 400M
+        volumeMounts:
+          - name: navidrome-vol
+            mountPath: /data
+            subPath: data
+          - name: navidrome-vol
+            mountPath: /music
+            subPath: music
+        ports:
+          - containerPort: 5230
+        envFrom:
+          - configMapRef:
+              name: navidrome
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: navidrome
+  namespace: media
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.121
+  ports:
+  - port: 80
+    targetPort: 4533
+    name: http
+  selector:
+    app: navidrome
+---
