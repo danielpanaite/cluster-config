@@ -1,4 +1,4 @@
-# K3s cluster configuration for v1.36.2 on Ubuntu LTS 24.04
+# K3s cluster configuration for v1.36.4 on Ubuntu LTS 24.04
 
 ## Preparation
 
@@ -15,7 +15,7 @@ sudo vim /etc/motd
 
 #### Install k3s with flags
 ```bash
-curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.36.2+k3s1 sh -s - --disable=traefik --disable=servicelb --write-kubeconfig-mode=644
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.36.4+k3s1 sh -s - --disable=traefik --disable=servicelb --write-kubeconfig-mode=644 --kube-proxy-arg=ipvs-strict-arp=true
 ```
 
 #### Install metallb for LoadBalancer services
