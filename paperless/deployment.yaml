@@ -15,6 +15,9 @@ data:
   PAPERLESS_TRAIN_TASK_CRON: "disable"
   PAPERLESS_OCR_USER_ARGS: '{"continue_on_soft_render_error": true}'
   PAPERLESS_OCR_PAGES: "5"
+  PAPERLESS_APPS: "allauth.socialaccount.providers.openid_connect"
+  PAPERLESS_LOGOUT_REDIRECT_URL: "https://auth.hyrax-ghoul.ts.net/api/oidc/end-session"
+  PAPERLESS_DISABLE_REGULAR_LOGIN: "true"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -51,7 +54,7 @@ spec:
             claimName: paperless-media
       containers:
       - name: paperless
-        image: ghcr.io/paperless-ngx/paperless-ngx:3.0.5
+        image: ghcr.io/paperless-ngx/paperless-ngx:3.1.3
         securityContext:
           runAsNonRoot: false
           allowPrivilegeEscalation: true
