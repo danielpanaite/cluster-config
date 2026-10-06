@@ -34,7 +34,7 @@ spec:
             claimName: navidrome
       containers:
       - name: navidrome
-        image: deluan/navidrome:0.64.0
+        image: deluan/navidrome:0.64.2
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false

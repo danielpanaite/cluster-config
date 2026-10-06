@@ -25,7 +25,7 @@ spec:
             claimName: memo
       containers:
       - name: memo
-        image: neosmemo/memos:0.30.0
+        image: neosmemo/memos:0.31.0
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
