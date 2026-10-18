@@ -9,7 +9,7 @@ data:
     directory: /downloads
     library: /config/musiclibrary.db
 
-    plugins: musicbrainz fetchart embedart zero convert web
+    plugins: musicbrainz fetchart embedart zero convert lyrics web
 
     original_date: true
     per_disc_numbering: true
@@ -50,6 +50,16 @@ data:
         mp3:
           command: ffmpeg -i $source -map 0:a -map 0:v? -map_metadata -1 -c:a libmp3lame -b:a 320k -c:v copy -id3v2_version 3 -disposition:v attached_pic -y $dest
           extension: mp3
+
+    lyrics:
+      auto: yes
+      fallback: null
+      force: yes
+      keep_synced: yes
+      print: no
+      rest_directory: null
+      sources: [lrclib]
+      synced: yes
 ---
 apiVersion: v1
 kind: ConfigMap
