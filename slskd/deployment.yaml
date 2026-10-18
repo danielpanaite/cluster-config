@@ -1,0 +1,118 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slskd
+  namespace: media
+data:
+  SLSKD_REMOTE_CONFIGURATION: "false"
+  SLSKD_VPN: "true"
+  SLSKD_VPN_PORT_FORWARDING: "true"
+  SLSKD_VPN_GLUETUN_URL: "http://localhost:8000"
+  SLSKD_VPN_GLUETUN_API_KEY: "gluetunslskd"
+  SLSKD_NO_DISK_LOGGER: "true"
+  SLSKD_DOWNLOADS_DIR: "/downloads"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gluetun-slskd
+  namespace: media
+data:
+  GLUETUN_HTTP_CONTROL_SERVER_ENABLE: "on"
+  HTTP_CONTROL_SERVER_AUTH_DEFAULT_ROLE: '{"auth":"apikey","apikey":"gluetunslskd"}'
+  VPN_SERVICE_PROVIDER: "protonvpn"
+  VPN_TYPE: "wireguard"
+  VPN_PORT_FORWARDING: "on"
+  VPN_PORT_FORWARDING_PROVIDER: "protonvpn"
+  STATUS_FILE: "/tmp/gluetun/status.json"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slskd
+  namespace: media
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: slskd
+  template:
+    metadata:
+      labels:
+        app: slskd
+    spec:
+      initContainers:
+        - name: gluetun
+          image: qmcgaw/gluetun:v3.41.1
+          restartPolicy: Always
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN"]
+          envFrom:
+          - configMapRef:
+              name: gluetun-slskd
+          - secretRef:
+              name: gluetun-slskd
+          volumeMounts:
+            - name: gluetun-shared
+              mountPath: /tmp/gluetun
+      securityContext:
+        fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
+      volumes:
+        - name: gluetun-shared
+          emptyDir: {}
+        - name: slskd-internal
+          emptyDir: {}
+        - name: slskd-vol
+          persistentVolumeClaim:
+            claimName: slskd
+      containers:
+      - name: slskd
+        image: slskd/slskd:0.26.1
+        securityContext:
+          runAsUser: 3001
+          runAsGroup: 3001
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 15m
+            memory: 105M
+          limits:
+            cpu: 1000m
+            memory: 500M
+        volumeMounts:
+          - name: slskd-internal
+            mountPath: /app
+          - name: slskd-vol
+            mountPath: /downloads
+        ports:
+          - containerPort: 5030
+          - containerPort: 5031
+          - containerPort: 50300
+        envFrom:
+          - configMapRef:
+              name: slskd
+          - secretRef:
+              name: slskd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slskd
+  namespace: media
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.122
+  ports:
+  - port: 80
+    targetPort: 5030
+    name: http
+  selector:
+    app: slskd
+---
