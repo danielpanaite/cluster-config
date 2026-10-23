@@ -25,7 +25,7 @@ spec:
               image: alpine/k8s:1.36.2
               env:
                 - name: EXCLUDE_IMAGES
-                  value: "lscr.io/linuxserver/emby lscr.io/linuxserver/qbittorrent postgres alpine/k8s alpine tailscale/tailscale"
+                  value: "lscr.io/linuxserver postgres alpine/k8s alpine tailscale/tailscale rancher/mirrored-coredns-coredns"
               imagePullPolicy: IfNotPresent
               command: ["/bin/sh", "-c"]
               args:
@@ -91,7 +91,7 @@ spec:
             claimName: cup
       containers:
         - name: cup
-          image: ghcr.io/sergi0g/cup:v3.5.1
+          image: ghcr.io/sergi0g/cup:v3.6.0
           command: ["/cup"]
           args: ["-c", "/config/cup.json", "serve", "-p", "8000"]
           ports:

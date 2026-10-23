@@ -52,7 +52,7 @@ spec:
             claimName: pocketid
       containers:
       - name: pocketid
-        image: pocketid/pocket-id:v2.18.0
+        image: pocketid/pocket-id:v2.19.1
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false

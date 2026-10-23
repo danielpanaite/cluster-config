@@ -73,7 +73,7 @@ spec:
             claimName: slskd
       containers:
       - name: slskd
-        image: slskd/slskd:0.26.1
+        image: slskd/slskd:0.26.2
         securityContext:
           runAsUser: 3001
           runAsGroup: 3001
