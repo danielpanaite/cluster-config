@@ -112,3 +112,12 @@ Pre-commit command to encrypt staged secrets
 ```bash
 files=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'secret.*\.ya?ml$' || true); set -- $files; c=$#; for f; do [ -f "$f" ] && sops -e -i "$f" && git add "$f"; done; if [ "$c" -gt 0 ]; then echo "SOPS encrypted $c file(s)"; fi
 ```
+
+#### Configure inotify limits
+
+```bash
+sudo tee /etc/sysctl.d/99-inotify.conf <<EOF
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=1024
+EOF
+```
