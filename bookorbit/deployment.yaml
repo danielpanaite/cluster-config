@@ -1,0 +1,93 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bookorbit
+  namespace: bookorbit
+data:
+  PUID: "3001"
+  PGID: "3001"
+  TZ: "Asia/Tokyo"
+  APP_URL: "https://books.hyrax-ghoul.ts.net"
+  PORT: "3000"
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: "bookorbit"
+  POSTGRES_DB: "bookorbit"
+  NODE_MAX_OLD_SPACE_SIZE: "2048"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookorbit
+  namespace: bookorbit
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: bookorbit
+  template:
+    metadata:
+      labels:
+        app: bookorbit
+    spec:
+      securityContext:
+        fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.37
+        command: ["sh", "-c", "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done"]
+      volumes:
+        - name: bookorbit-vol
+          persistentVolumeClaim:
+            claimName: bookorbit
+      containers:
+      - name: bookorbit
+        image: ghcr.io/bookorbit/bookorbit:3.5.0
+        securityContext:
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 100m
+            memory: 300M
+          limits:
+            cpu: "1"
+            memory: 2500M
+        volumeMounts:
+          - mountPath: "/books"
+            name: bookorbit-vol
+            subPath: books
+          - mountPath: "/data"
+            name: bookorbit-vol
+            subPath: data
+        ports:
+          - containerPort: 3000
+        envFrom:
+          - configMapRef:
+              name: bookorbit
+          - secretRef:
+              name: bookorbit
+        readinessProbe:
+          tcpSocket:
+            port: 3000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookorbit
+  namespace: bookorbit
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.131
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http
+  selector:
+    app: bookorbit
+---
