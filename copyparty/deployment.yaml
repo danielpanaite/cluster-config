@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: copyparty
+  namespace: storage
+data:
+  PYTHONUNBUFFERED: "1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: copyparty
+  namespace: storage
+  labels:
+    app: copyparty
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: copyparty
+  template:
+    metadata:
+      labels:
+        app: copyparty
+    spec:
+      securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
+        fsGroup: 3001
+      terminationGracePeriodSeconds: 15
+      volumes:
+        - name: copyparty-data
+          persistentVolumeClaim:
+            claimName: copyparty
+        - name: copyparty-config
+          secret:
+            secretName: copyparty
+            defaultMode: 0440
+      containers:
+        - name: copyparty
+          image: copyparty/ac:1.20.26
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 250m
+            limits:
+              memory: 1Gi
+              cpu: 1000m
+          envFrom:
+            - configMapRef:
+                name: copyparty
+          ports:
+            - name: http
+              containerPort: 3923
+          volumeMounts:
+            - name: copyparty-data
+              mountPath: /w
+            - name: copyparty-config
+              mountPath: /cfg/copyparty.conf
+              subPath: copyparty.conf
+              readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: copyparty
+  namespace: storage
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.115
+  selector:
+    app: copyparty
+  ports:
+    - protocol: TCP
+      port: 80
+      name: http
+      targetPort: 3923
