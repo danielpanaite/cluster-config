@@ -46,7 +46,7 @@ spec:
             claimName: bookorbit
       containers:
       - name: bookorbit
-        image: ghcr.io/bookorbit/bookorbit:3.5.0
+        image: ghcr.io/bookorbit/bookorbit:3.8.0
         securityContext:
           allowPrivilegeEscalation: false
         resources:
