@@ -137,6 +137,8 @@ spec:
               value: "3001"
             - name: PGID
               value: "3001"
+            - name: UMASK
+              value: "002"
             - name: TZ
               value: "Asia/Tokyo"
           volumeMounts:
