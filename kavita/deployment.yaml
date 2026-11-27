@@ -1,0 +1,73 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kavita
+  namespace: books
+data:
+  PUID: "3001"
+  PGID: "3001"
+  TZ: Asia/Tokyo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kavita
+  namespace: books
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kavita
+  template:
+    metadata:
+      labels:
+        app: kavita
+        config.cupdate/stay-on-current-major: "true"
+    spec:
+      securityContext:
+        fsGroup: 3001
+        fsGroupChangePolicy: OnRootMismatch
+      volumes:
+        - name: kavita-data
+          persistentVolumeClaim:
+            claimName: kavita-data
+        - name: kavita-config
+          persistentVolumeClaim:
+            claimName: kavita-config
+      containers:
+      - name: kavita
+        image: lscr.io/linuxserver/kavita:0.9.1
+        resources:
+          requests:
+            cpu: 50m
+            memory: 100M
+          limits:
+            cpu: 500m
+            memory: 1000M
+        volumeMounts:
+          - name: kavita-config
+            mountPath: /config
+          - name: kavita-data
+            mountPath: /data
+        ports:
+          - containerPort: 5000
+        envFrom:
+          - configMapRef:
+              name: kavita
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kavita
+  namespace: books
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.255.131
+  ports:
+  - port: 80
+    targetPort: 5000
+    name: http
+  selector:
+    app: kavita
+---
