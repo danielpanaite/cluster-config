@@ -1,0 +1,15 @@
+services:
+  stalwart:
+    image: stalwartlabs/stalwart:v1.1.1
+    container_name: stalwart
+    init: true
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "25:25"
+      - "993:993"
+      - "465:465"
+    volumes:
+      - ./etc:/etc/stalwart
+      - ./data:/var/lib/stalwart
