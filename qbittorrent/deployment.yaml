@@ -52,7 +52,7 @@ spec:
 
       initContainers:
         - name: gluetun
-          image: qmcgaw/gluetun:v3.41.1
+          image: qmcgaw/gluetun:v3.41.3
           restartPolicy: Always
           securityContext:
             privileged: true
@@ -71,7 +71,7 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
       containers:
         - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent:5.2.2
+          image: lscr.io/linuxserver/qbittorrent:5.3.1
           securityContext:
             allowPrivilegeEscalation: false
           envFrom:
@@ -96,17 +96,28 @@ spec:
             - |
               echo "Waiting for Gluetun port file..."
               while [ ! -f /tmp/gluetun/forwarded_port ]; do sleep 2; done
-              
+
               OLD_PORT=""
+              EMPTY_LOGGED=0
               while true; do
-                CURRENT_PORT=$(cat /tmp/gluetun/forwarded_port)
-                if [ "$CURRENT_PORT" != "$OLD_PORT" ] && [ ! -z "$CURRENT_PORT" ]; then
-                  echo "New ProtonVPN Port Detected: $CURRENT_PORT. Updating qBittorrent..."
-                  
-                  wget -q -O- --post-data="json={\"listen_port\":${CURRENT_PORT},\"random_port\":false,\"upnp\":false}" \
-                    http://127.0.0.1:8080/api/v2/app/setPreferences
-                  
-                  OLD_PORT=$CURRENT_PORT
+                CURRENT_PORT=$(cat /tmp/gluetun/forwarded_port 2>/dev/null)
+
+                if [ -z "$CURRENT_PORT" ]; then
+                  if [ "$EMPTY_LOGGED" -eq 0 ]; then
+                    echo "$(date -Iseconds) WARNING: /tmp/gluetun/forwarded_port is empty (no active VPN port forward)."
+                    EMPTY_LOGGED=1
+                  fi
+                  OLD_PORT=""
+                elif [ "$CURRENT_PORT" != "$OLD_PORT" ]; then
+                  echo "$(date -Iseconds) New ProtonVPN Port Detected: $CURRENT_PORT. Updating qBittorrent..."
+
+                  if wget -q -O- --post-data="json={\"listen_port\":${CURRENT_PORT},\"random_port\":false,\"upnp\":false}" \
+                    http://127.0.0.1:8080/api/v2/app/setPreferences; then
+                    OLD_PORT=$CURRENT_PORT
+                    EMPTY_LOGGED=0
+                  else
+                    echo "$(date -Iseconds) ERROR: Failed to update qBittorrent listen_port to $CURRENT_PORT."
+                  fi
                 fi
                 sleep 45
               done
